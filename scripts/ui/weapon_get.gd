@@ -8,6 +8,10 @@ const SIZE := Vector2(398, 224)
 
 var weapon: Dictionary
 var character_id := "x"
+## Arte grande de quem venceu (escolhida pela fase); null = sprite do jogo ampliado.
+var art: Texture2D
+## Pinta a armadura na cor da arma (só o X: é o azul dele que vira a cor da arma).
+var tint := true
 
 var _t := 0.0
 var _hero: CanvasItem
@@ -33,24 +37,28 @@ func _ready() -> void:
 	band.size = Vector2(SIZE.x, 72)
 	add_child(band)
 
-	var art := Assets.texture("res://assets/fx_mmx8/weapon_get_x.png")
-	if art and character_id == "x":
+	if art:
+		# Cabe numa caixa de 200×216 com os pés no chão da tela; arte grande (ilustração) com filtro
+		# linear, pixel art sem filtro.
 		var big := Sprite2D.new()
 		big.texture = art
-		big.centered = false
-		big.position = Vector2(-22, 0)
-		_tint.shader = preload("res://scripts/ui/weapon_color.gdshader")
-		_tint.set_shader_parameter(&"target", weapon.color)
-		big.material = _tint
+		var k := minf(216.0 / art.get_height(), 200.0 / art.get_width())
+		big.scale = Vector2(k, k)
+		big.position = Vector2(100, 224 - art.get_height() * k / 2.0)
+		big.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS if k < 1.0 else CanvasItem.TEXTURE_FILTER_NEAREST
+		if tint:
+			_tint.shader = preload("res://scripts/ui/weapon_color.gdshader")
+			_tint.set_shader_parameter(&"target", weapon.color)
+			big.material = _tint
 		_hero = big
 	else:
 		var small := SpriteVisual.new()
-		small.position = Vector2(110, 140)
+		small.position = Vector2(110, 150)
 		small.scale = Vector2(3, 3)
+		small.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		small.set_character(character_id)
-		small.show_state(&"idle", 1)
+		small.show_state(&"victory", 1)
 		_hero = small
-	_hero.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(_hero)
 
 	var title := _label("WEAPON GET", 26, Color8(248, 248, 248))
@@ -89,13 +97,12 @@ func _process(delta: float) -> void:
 			_hero.set_palette(weapon.id)
 		else:
 			_tint.set_shader_parameter(&"amount", 1.0)
-	if before < 2.0 and _t >= 2.0 and _hero is SpriteVisual:
-		_hero.show_state(&"shot", 1)
+
 	for at in [2.1, 2.5, 2.9]:
 		if before < at and _t >= at:
 			var s := Shard.new()
 			s.color = weapon.color
-			s.position = Vector2(178, 58) if not _hero is SpriteVisual else _hero.position + Vector2(48, -42)
+			s.position = Vector2(196, 70)
 			add_child(s)
 			# Coice do canhão.
 			var home: Vector2 = _hero.position
@@ -103,8 +110,6 @@ func _process(delta: float) -> void:
 			kick.tween_property(_hero, "position", home - Vector2(4, 0), 0.04)
 			kick.tween_property(_hero, "position", home, 0.12)
 	if before < 3.4 and _t >= 3.4:
-		if _hero is SpriteVisual:
-			_hero.show_state(&"idle", 1)
 		var info := _label("Arma do %s\nFraco contra ela: %s" % [weapon.boss, weapon.weak], 10, Color8(200, 208, 232))
 		info.position = Vector2(216, 84)
 		add_child(info)

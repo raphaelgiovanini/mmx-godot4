@@ -157,8 +157,30 @@ func _stage_clear() -> void:
 	var get_screen := preload("res://scripts/ui/weapon_get.gd").new()
 	get_screen.weapon = Weapons.LIST.filter(func(w): return w.id == "shotgun_ice")[0]
 	get_screen.character_id = player.character_id
+	get_screen.art = _victory_art()
+	get_screen.tint = player.character_id == "x"
 	add_child(get_screen)
 	music.play_track(MUSIC + "weapon_get.ogg", "")
+
+
+## Arte grande de quem venceu: ilustração local (assets/art, fora do git) quando existe, senão a do mmx8.
+## X sem armadura: o X da tela de WEAPON GET do mmx8. Armadura inteira: a arte dela. Peças misturadas: a
+## da peça do corpo. Outros personagens: a ilustração deles (sem ela, a tela usa o sprite do jogo).
+func _victory_art() -> Texture2D:
+	var id := player.character_id
+	if id != "x":
+		return Assets.texture("res://assets/art/%s.png" % id)
+	var body := player.part("body")
+	var full := body if body != "" and player.full_set(body) else ""
+	if full == "tri" and player.chip == "gold":
+		full = "gold"
+	var look := full if full != "" else body
+	if look == "":
+		return Assets.texture("res://assets/fx_mmx8/weapon_get_x.png")
+	for path in ["res://assets/art/%s.png" % look, "res://assets/characters/portraits/%s.png" % look]:
+		if Assets.exists(path):
+			return Assets.texture(path)
+	return Assets.texture("res://assets/fx_mmx8/weapon_get_x.png")
 
 
 ## Texto grande no meio da tela; some depois de `secs` (0 = fica). READY e WARNING usam o letreiro
