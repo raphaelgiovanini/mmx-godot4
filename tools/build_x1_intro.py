@@ -98,7 +98,78 @@ def collision(fg):
             open_.setdefault(run, ty)
     keep = lambda r: r[2] * r[3] > TILE * TILE and not any(
         x0 <= r[0] and r[0] + r[2] <= x1 and y0 <= r[1] and r[1] + r[3] <= y1 for x0, y0, x1, y1 in DROP)
-    return [r for r in rects if keep(r)]
+    return slopes(fg, [r for r in rects if keep(r)], green)
+
+
+## Rampas: em blocos de 16 px elas viram escada e o X trava no degrau. Onde o topo da pista sobe ou
+## desce aos poucos (1 a 12 px a cada 8 px), troca os blocos por fatias inclinadas que seguem o desenho.
+SLOPE_STEP = 8
+SLOPE_DEPTH = 24
+
+
+def slopes(fg, rects, green):
+    w, h = fg.size
+    px = fg.load()
+
+    def top(x):
+        run = 0
+        for y in range(h):
+            run = run + 1 if green(px[x, y]) else 0
+            if run == 6:
+                return y - 5
+        return None
+
+    surf = [top(x) for x in range(w)]
+    cells = [x for x in range(0, w - SLOPE_STEP, SLOPE_STEP)
+             if surf[x] is not None and surf[x + SLOPE_STEP] is not None and 1 <= abs(surf[x] - surf[x + SLOPE_STEP]) <= 12]
+    zones, polys = [], []
+    for x in cells:
+        if zones and x - zones[-1][1] <= SLOPE_STEP:
+            zones[-1][1] = x + SLOPE_STEP
+        else:
+            zones.append([x, x + SLOPE_STEP])
+    # Rampa de verdade: larga e sempre no mesmo sentido (postes e bordas de pilar dão falsos trechos curtos).
+    # As pontas podem ter um degrau no sentido contrário (emenda com a pista reta): saem antes do teste.
+    def ramp(z):
+        d = [surf[x + SLOPE_STEP] - surf[x] for x in range(z[0], z[1] - SLOPE_STEP + 1, SLOPE_STEP)]
+        sign = 1 if sum(d) > 0 else -1
+        while d and d[0] * sign < 0:
+            d.pop(0)
+            z[0] += SLOPE_STEP
+        while d and d[-1] * sign < 0:
+            d.pop()
+            z[1] -= SLOPE_STEP
+        return z[1] - z[0] >= 64 and all(v * sign >= 0 for v in d) and abs(sum(d)) >= 16
+    zones = [z for z in zones if ramp(z)]
+    for xa, xb in zones:
+        xa, xb = max(xa - 2 * SLOPE_STEP, 0), min(xb + 2 * SLOPE_STEP, w - 1)
+        bottom = max(surf[x] for x in range(xa, xb + 1) if surf[x] is not None) + SLOPE_DEPTH
+        for x in range(xa, xb, SLOPE_STEP):
+            a, b = surf[x], surf[min(x + SLOPE_STEP, w - 1)]
+            if a is not None and b is not None:
+                polys.append([[x, a], [x + SLOPE_STEP, b], [x + SLOPE_STEP, bottom], [x, bottom]])
+        cut = []
+        for r in rects:
+            rx, ry, rw, rh = r
+            if rx + rw <= xa or rx >= xb or ry >= bottom:
+                cut.append(r)
+                continue
+            if rx < xa:
+                cut.append([rx, ry, xa - rx, rh])
+            if rx + rw > xb:
+                cut.append([xb, ry, rx + rw - xb, rh])
+            if ry + rh > bottom:
+                x0, x1 = max(rx, xa), min(rx + rw, xb)
+                cut.append([x0, bottom, x1 - x0, ry + rh - bottom])
+        rects = cut
+    # Topo de cada bloco no chão desenhado (a grade de 16 px deixa degraus de até 15 px nas emendas).
+    for r in rects:
+        near = sorted(surf[x] for x in range(r[0], min(r[0] + r[2], w)) if surf[x] is not None and abs(surf[x] - r[1]) <= 12)
+        if len(near) * 2 >= r[2]:
+            top = near[len(near) // 2]
+            r[3] += r[1] - top
+            r[1] = top
+    return rects, polys
 
 
 def main():
@@ -106,11 +177,11 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     fg = transparent(src.crop(FG))
     bg = transparent(src.crop(BG))
-    rects = collision(fg)
+    rects, polys = collision(fg)
     meta = {"fg": {"size": fg.size, "strips": strips(fg, "fg")}, "bg": {"size": bg.size, "strips": strips(bg, "bg")},
-            "strip": STRIP, "scale": 3, "solids": rects}
+            "strip": STRIP, "scale": 3, "solids": rects, "slopes": polys}
     json.dump(meta, open(os.path.join(OUT, "stage.json"), "w"))
-    print(len(rects), "blocos de colisão")
+    print(len(rects), "blocos de colisão,", len(polys), "fatias de rampa")
 
 
 main()

@@ -51,6 +51,13 @@ func _use_map() -> void:
 	blocks = [Rect2(-32, -300, 80, 800), Rect2(w - 9, -300, 40, 800)]
 	for r in _map.solids:
 		blocks.append(Rect2(r[0], r[1], r[2], r[3]))
+	# Rampas: fatias inclinadas (em blocos de 16 px viravam escada e o X travava no degrau).
+	var ramps := StaticBody2D.new()
+	for poly in _map.get("slopes", []):
+		var shape := CollisionPolygon2D.new()
+		shape.polygon = PackedVector2Array(poly.map(func(v): return Vector2(v[0], v[1])))
+		ramps.add_child(shape)
+	add_child(ramps)
 	pit_y = _map.fg.size[1] + 40.0
 	arena = Vector2(w - 9 - 398, w - 9)
 	gate_x = arena.x - 16
