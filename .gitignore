@@ -19,6 +19,7 @@ assets/charge/
 assets/weapons/*
 !assets/weapons/palettes.json
 assets/ref/
+assets/stages/
 assets/fx/*
 !assets/fx/emblem_x.png
 __pycache__/

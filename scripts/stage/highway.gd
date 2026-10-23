@@ -3,21 +3,25 @@ extends "res://scripts/stage/block_room.gd"
 ## carros batidos, vigas e inimigos; termina numa arena fechada com o Chill Penguin.
 ## Blocos com o fundo em DECK_BOTTOM são pista; os outros são carros e vigas.
 ## Sem tiles por enquanto: tudo desenhado em código, colisão pela lista `blocks` (block_room.gd).
+## Com o mapa original instalado (tools/build_x1_intro.py → assets/stages/x1_intro, só local), a fase
+## vira a do X1: camadas do mapa ampliadas e suavizadas, colisão tirada do próprio mapa.
 
 const DECK_BOTTOM := 256.0
-const PIT_Y := 280.0             # abaixo disso: caiu no buraco
-const CHECKPOINT_X := 1420.0
-const GATE_X := 2984.0           # porta da arena
-const ARENA := Vector2(3000, 3398)
-const BOSS_AT := Vector2(3300, 176)
 const MUSIC := "res://assets/music/"
+const MAP := "res://assets/stages/x1_intro/"
 
+var pit_y := 280.0             # abaixo disso: caiu no buraco
+var checkpoint_x := 1420.0
+var gate_x := 2984.0           # porta da arena
+var arena := Vector2(3000, 3398)
+var boss_at := Vector2(3300, 176)
 ## [tipo, x, y, patrulha]; tipo: Enemy.Kind (0 Metool, 1 Batton, 2 canhão, 3 Spiky)
-const ENEMIES := [
+var enemies := [
 	[0, 380, 176, 60], [1, 560, 110, 0], [3, 820, 176, 90], [1, 980, 100, 0], [2, 1136, 136, 0],
 	[0, 1260, 176, 40], [2, 1520, 176, 0], [1, 1700, 60, 0], [0, 2010, 176, 40], [1, 2200, 130, 0],
 	[3, 2260, 208, 100], [2, 2520, 176, 0], [1, 2680, 110, 0], [3, 2800, 176, 120],
 ]
+var _map := {}
 @onready var player: Player = $"../Player"
 @onready var camera: Camera2D = $"../Player/Camera"
 @onready var music: AudioStreamPlayer = $"../Music"
@@ -27,8 +31,10 @@ var _t := 0
 
 
 func _ready() -> void:
+	if Assets.exists(MAP + "fg_00.png"):
+		_use_map()
 	super()
-	for e in ENEMIES:
+	for e in enemies:
 		var en := Enemy.new()
 		en.kind = e[0]
 		en.position = Vector2(e[1], e[2])
@@ -38,24 +44,59 @@ func _ready() -> void:
 	_banner("READY", 1.6)
 
 
+## Fase do mapa original: colisão do stage.json, inimigos no chão de cada ponto, chefe no trecho final.
+func _use_map() -> void:
+	_map = JSON.parse_string(FileAccess.get_file_as_string(MAP + "stage.json"))
+	var w: float = _map.fg.size[0]
+	blocks = [Rect2(-32, -300, 80, 800), Rect2(w - 9, -300, 40, 800)]
+	for r in _map.solids:
+		blocks.append(Rect2(r[0], r[1], r[2], r[3]))
+	pit_y = _map.fg.size[1] + 40.0
+	arena = Vector2(w - 9 - 398, w - 9)
+	gate_x = arena.x - 16
+	boss_at = Vector2(arena.y - 90, floor_at(arena.y - 90))
+	checkpoint_x = 3900.0
+	enemies = []
+	var kinds := [0, 1, 3, 2, 1, 0, 3, 1, 2, 0, 1, 3, 2, 1, 0, 3, 1, 0]
+	for i in kinds.size():
+		var x := 420.0 + i * 370.0
+		var y := floor_at(x)
+		if y < INF and x < gate_x - 120:
+			enemies.append([kinds[i], x, y - (60 if kinds[i] == 1 else 0), 50])
+	player.global_position = Vector2(100, floor_at(100))
+	camera.limit_left = 0
+	camera.limit_right = int(w - 9)
+	camera.limit_top = -40
+	camera.limit_bottom = int(_map.fg.size[1])
+
+
+## Topo do chão mais alto que cobre x (INF se é buraco).
+func floor_at(x: float) -> float:
+	var best := INF
+	for r in blocks:
+		if r.position.x <= x and x < r.end.x and r.position.y > -100:
+			best = minf(best, r.position.y)
+	return best
+
+
 func _physics_process(_delta: float) -> void:
 	_t += 1
-	if player.global_position.y > PIT_Y:
+	if player.global_position.y > pit_y:
 		player.die()
-	if not _checkpoint and player.global_position.x > CHECKPOINT_X:
+	if not _checkpoint and player.global_position.x > checkpoint_x and player.is_on_floor():
 		_checkpoint = true
-		player.spawn_point = Vector2(CHECKPOINT_X, 176)
+		player.spawn_point = player.global_position
 		_banner("CHECKPOINT", 1.0)
-	if not _arena and player.global_position.x > ARENA.x + 24:
+	if not _arena and player.global_position.x > arena.x + 24:
 		_enter_arena()
-	if _t % 4 == 0:
+	if _t % 4 == 0 and _map.is_empty():
 		queue_redraw()   # luzes piscando
 
 
 ## Fecha a porta atrás do jogador, prende a câmera na arena e chama o chefe.
 func _enter_arena() -> void:
 	_arena = true
-	var door := Rect2(GATE_X, 96, 16, 80)
+	var door := Rect2(gate_x, boss_at.y - 80, 16, 80)
 	blocks.append(door)
 	var body := StaticBody2D.new()
 	var shape := CollisionShape2D.new()
@@ -65,13 +106,14 @@ func _enter_arena() -> void:
 	shape.position = door.get_center()
 	body.add_child(shape)
 	add_child(body)
-	camera.limit_left = int(ARENA.x)
-	camera.limit_right = int(ARENA.y)
-	player.spawn_point = Vector2(ARENA.x + 40, 176)
+	camera.limit_left = int(arena.x)
+	camera.limit_right = int(arena.y)
+	player.spawn_point = Vector2(arena.x + 40, boss_at.y)
 	var boss := ChillPenguin.new()
 	boss.respawn = false
-	boss.arena = Vector2(ARENA.x + 24, ARENA.y - 22)
-	boss.position = BOSS_AT
+	boss.arena = Vector2(arena.x + 24, arena.y - 22)
+	boss.floor_y = boss_at.y
+	boss.position = boss_at
 	boss.defeated.connect(_stage_clear)
 	get_parent().add_child(boss)
 	music.play_track(MUSIC + "boss_intro.ogg", MUSIC + "boss_loop.ogg")
@@ -121,6 +163,10 @@ func _banner(text: String, secs: float, color := Color8(248, 248, 248)) -> void:
 
 
 func _draw() -> void:
+	if not _map.is_empty():
+		if _arena:
+			_barrier(blocks.back())   # porta da arena
+		return
 	var lamp_on := (_t / 20) % 2 == 0
 	for r in blocks:
 		if r.end.y >= DECK_BOTTOM:
@@ -165,7 +211,7 @@ func _deck(r: Rect2, lamp_on: bool) -> void:
 		lx += 192.0
 	# Borda cortada nos buracos, com ferragem aparente.
 	for edge in [r.position.x, r.end.x]:
-		if edge > 0 and edge < ARENA.y:
+		if edge > 0 and edge < arena.y:
 			for i in 4:
 				draw_line(Vector2(edge, r.position.y + 14 + i * 9), Vector2(edge + (5 if edge == r.end.x else -5), r.position.y + 18 + i * 9), Color8(150, 90, 60), 1)
 	# Luz de alerta nas pontas dos buracos.
@@ -224,8 +270,34 @@ func _build_background() -> void:
 	grad.set_anchors_preset(Control.PRESET_FULL_RECT)
 	sky.add_child(grad)
 	get_parent().add_child.call_deferred(sky)
+	if not _map.is_empty():
+		g.gradient.set_color(0, Color8(40, 28, 52))
+		g.gradient.set_color(1, Color8(82, 56, 74))
+		# Fundo do mapa: 3545 px contra 7680 da frente, anda ~0,43 da câmera; embaixo alinhado com a tela.
+		var far := Parallax2D.new()
+		far.scroll_scale = Vector2(0.43, 0.5)
+		far.z_index = -5
+		far.add_child(_strips("bg", Vector2(0, 224 - float(_map.bg.size[1]) + 30)))
+		get_parent().add_child.call_deferred(far)
+		add_child(_strips("fg", Vector2.ZERO))
+		return
 	get_parent().add_child.call_deferred(_city(0.15, 1, Color8(34, 30, 70), 120.0, 3))
 	get_parent().add_child.call_deferred(_city(0.4, 2, Color8(22, 24, 52), 80.0, 7))
+
+
+## Faixas de 1024 px ampliadas 3x (Scale3x), desenhadas a 1/3 com filtro linear: contorno liso.
+func _strips(layer: String, at: Vector2) -> Node2D:
+	var root := Node2D.new()
+	root.position = at
+	for i in int(_map[layer].strips):
+		var sp := Sprite2D.new()
+		sp.texture = Assets.texture(MAP + "%s_%02d.png" % [layer, i])
+		sp.centered = false
+		sp.scale = Vector2.ONE / float(_map.scale)
+		sp.position.x = i * float(_map.strip)
+		sp.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		root.add_child(sp)
+	return root
 
 
 func _city(scroll: float, seed_: int, color: Color, base_h: float, z: int) -> Parallax2D:

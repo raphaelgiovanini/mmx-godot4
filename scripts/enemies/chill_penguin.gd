@@ -20,7 +20,6 @@ const YETI := {
 	&"land": &"icejump_land", &"blizzard": &"icestorm_loop",
 }
 const YETI_FEET := -48.0   # quadros de 256×128 centrados; pés na linha 112
-const FLOOR_Y := 176.0
 const BODY_HALF := 20.0     # o corpo fica a 20 px da borda de trás das poses (olham para a esquerda)
 const GRAVITY := 0.25
 const CONTACT := 4
@@ -28,8 +27,9 @@ const SLIDE_SPEED := 4.5
 
 enum State { INTRO, IDLE, SHOOT, DIVE, SLIDE, BREATH, JUMP, LAND, BLIZZARD }
 
-## Limites da arena (x mínimo e máximo do corpo).
+## Limites da arena (x mínimo e máximo do corpo) e altura do chão.
 @export var arena := Vector2(3024, 3376)
+@export var floor_y := 176.0
 
 var _state := State.INTRO
 var _t := 0
@@ -138,7 +138,7 @@ func _physics_process(delta: float) -> void:
 				for d in [44, 84]:
 					var x := clampf(position.x + _facing * d, arena.x, arena.y)
 					var st := IceStatue.new()
-					st.position = Vector2(x, FLOOR_Y)
+					st.position = Vector2(x, floor_y)
 					get_parent().add_child(st)
 			if _t <= 0:
 				_set_state(State.IDLE, 40)
@@ -149,8 +149,8 @@ func _physics_process(delta: float) -> void:
 			if _vel.y > 0 and _t > 0:
 				_t = 0
 				_play(&"fall")
-			if position.y >= FLOOR_Y:
-				position.y = FLOOR_Y
+			if position.y >= floor_y:
+				position.y = floor_y
 				_set_state(State.LAND, 14)
 		State.BLIZZARD:
 			# Vento na direção para onde ele olha: empurra o X (respeitando as paredes).
@@ -199,6 +199,7 @@ func _spawn(n: Node2D, at: Vector2, dir := 0) -> void:
 		n.set(&"dir", dir)
 	elif n is IceShot:
 		n.dir = _facing
+		n.floor_y = floor_y
 	get_parent().add_child(n)
 
 
@@ -210,14 +211,15 @@ static func _player_box(tree: SceneTree) -> Rect2:
 ## Pedaço de gelo: voa reto, quica uma vez no chão e se quebra na parede ou no X (2 de dano).
 class IceShot extends Node2D:
 	var dir := -1
+	var floor_y := 176.0
 	var _vy := -1.2
 	var _life := 200
 
 	func _physics_process(_delta: float) -> void:
 		position += Vector2(dir * 2.6, _vy)
 		_vy += 0.06
-		if position.y >= FLOOR_Y - 6 and _vy > 0:
-			position.y = FLOOR_Y - 6
+		if position.y >= floor_y - 6 and _vy > 0:
+			position.y = floor_y - 6
 			_vy = -_vy * 0.6
 		_life -= 1
 		var box := ChillPenguin._player_box(get_tree())
