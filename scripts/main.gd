@@ -6,9 +6,18 @@ extends SubViewportContainer
 
 
 func _ready() -> void:
+	# A interface ainda pertence ao SubViewport, que gera as letras na escala dele (1×) e elas saem
+	# borradas na janela: gera na escala da janela.
+	$View.oversampling = true
+	get_viewport().size_changed.connect(_fit_text)
+	_fit_text()
 	get_tree().node_added.connect(_on_node_added)
 	for n in find_children("*", "CanvasLayer", true, false):
 		_on_node_added(n)
+
+
+func _fit_text() -> void:
+	$View.oversampling_override = get_viewport().get_final_transform().get_scale().x
 
 
 func _on_node_added(n: Node) -> void:
