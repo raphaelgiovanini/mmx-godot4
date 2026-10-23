@@ -1,0 +1,65 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/stage/block_room.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/player/dash_fx.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/ui/hud_bars.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/stage/hazard.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/enemies/boss.gd" id="8"]
+[ext_resource type="Script" path="res://scripts/stage/music.gd" id="9"]
+
+[node name="TestRoom" type="Node2D"]
+
+[node name="Background" type="ColorRect" parent="."]
+offset_left = -256.0
+offset_top = -512.0
+offset_right = 1280.0
+offset_bottom = 512.0
+color = Color(0.07, 0.08, 0.12, 1)
+
+[node name="Blocks" type="Node2D" parent="."]
+script = ExtResource("1")
+blocks = Array[Rect2]([Rect2(-64, 192, 1088, 64), Rect2(-64, -256, 32, 448), Rect2(992, -256, 32, 448), Rect2(160, 144, 64, 48), Rect2(304, 96, 96, 16), Rect2(480, -96, 24, 288), Rect2(560, -96, 24, 240), Rect2(680, 128, 80, 64), Rect2(820, 64, 64, 16)])
+
+[node name="Spikes" type="Area2D" parent="."]
+position = Vector2(620, 184)
+script = ExtResource("7")
+rect = Rect2(0, 0, 48, 8)
+
+[node name="ChillPenguin" type="StaticBody2D" parent="."]
+position = Vector2(400, 192)
+script = ExtResource("8")
+
+[node name="Player" parent="." instance=ExtResource("2")]
+position = Vector2(48, 192)
+
+[node name="Camera" type="Camera2D" parent="Player"]
+position = Vector2(0, -24)
+limit_left = -64
+limit_right = 1024
+limit_bottom = 256
+position_smoothing_enabled = false
+
+[node name="DashFX" type="Node2D" parent="Player"]
+script = ExtResource("4")
+camera_path = NodePath("../Camera")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("3")
+player_path = NodePath("../Player")
+
+[node name="Health" type="Control" parent="HUD"]
+script = ExtResource("6")
+
+[node name="BossBar" type="Control" parent="HUD"]
+script = ExtResource("6")
+boss_mode = true
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+script = ExtResource("5")
+player_path = NodePath("../Player")
+
+[node name="Music" type="AudioStreamPlayer" parent="."]
+script = ExtResource("9")

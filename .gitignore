@@ -1,0 +1,22 @@
+# ROMs e assets extraídos: nunca versionar
+*.sfc
+*.smc
+roms/
+extracted/
+# Godot 4
+.godot/
+export/
+build/
+# Sprites dos personagens (IP da Capcom / ripadores): gerados por tools/export_mmx8_skins.gd
+assets/characters/
+assets/shots/
+assets/bosses/
+assets/armor_parts/
+assets/sfx/
+assets/art/
+assets/charge/
+assets/weapons/
+assets/ref/
+assets/fx/
+assets/music/
+__pycache__/
