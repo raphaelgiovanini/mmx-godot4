@@ -14,9 +14,11 @@ BG = (9, 490, 3554, 842)
 STRIP = 1024
 TILE = 16
 ## Peças soltas que o mapa desenha fora do lugar (x0, y0, x1, y1): a plataforma que cai repetida embaixo
-## dela, as caixinhas ao lado, os pedaços da ponte quebrada caindo e as moitas atrás da pista final.
+## dela, as caixinhas ao lado, os pedaços da ponte quebrada caindo, as moitas atrás da pista final, o
+## prédio verde de vidro e o poste perto dele (o verde deles parece pista).
 ## Topos de poste (1 bloco) também saem.
-DROP = [(2130, 370, 2460, 440), (2140, 370, 2180, 440), (3960, 236, 4860, 310), (6580, 130, 7690, 192)]
+DROP = [(2130, 370, 2460, 440), (2140, 370, 2180, 440), (3960, 236, 4860, 310), (6580, 130, 7690, 192),
+        (5400, 0, 5560, 112), (5770, 40, 5800, 144)]
 OUT = os.path.join(os.path.dirname(__file__), "..", "assets/stages/x1_intro")
 
 
@@ -65,14 +67,16 @@ def strips(im, name):
     return n
 
 
-def green(p):
-    r, g, b, a = p
-    return a and g >= r + 10 and g >= b + 8
+## Trechos só de pista (começo, plataforma que cai, topo dos pilares, pista final): as cores deles são
+## as cores do "chão". Assim prédios de vidro esverdeado, postes e carros não viram parede.
+DECK = [(48, 128, 800, 176), (2200, 276, 2470, 316), (4318, 78, 4380, 104), (7300, 192, 7680, 224)]
 
 
 def collision(fg):
     w, h = fg.size
     px = fg.load()
+    deck = {c for box in DECK for c in fg.crop(box).get_flattened_data() if c[3] and c[1] >= c[0] + 10 and c[1] >= c[2] + 8}
+    green = lambda p: p in deck
     solid = [[sum(green(px[tx * TILE + i, ty * TILE + j]) for i in range(TILE) for j in range(TILE)) * 2 >= TILE * TILE
               for tx in range(w // TILE)] for ty in range(h // TILE)]
     # Junta blocos vizinhos: faixas por linha, depois linhas iguais empilhadas.
