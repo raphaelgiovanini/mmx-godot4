@@ -12,13 +12,12 @@ const ARENA := Vector2(3000, 3398)
 const BOSS_AT := Vector2(3300, 176)
 const MUSIC := "res://assets/music/"
 
-## [tipo, x, y, patrulha]; tipo: Enemy.Kind
+## [tipo, x, y, patrulha]; tipo: Enemy.Kind (0 Metool, 1 Batton, 2 canhão, 3 Spiky)
 const ENEMIES := [
-	[0, 380, 176, 60], [1, 560, 120, 0], [0, 800, 176, 50], [1, 980, 110, 0], [2, 1136, 136, 0],
-	[0, 1260, 176, 40], [2, 1520, 176, 0], [1, 1700, 60, 0], [0, 2010, 176, 40], [1, 2200, 140, 0],
-	[0, 2260, 208, 90], [2, 2520, 176, 0], [1, 2680, 120, 0], [0, 2840, 176, 70],
+	[0, 380, 176, 60], [1, 560, 110, 0], [3, 820, 176, 90], [1, 980, 100, 0], [2, 1136, 136, 0],
+	[0, 1260, 176, 40], [2, 1520, 176, 0], [1, 1700, 60, 0], [0, 2010, 176, 40], [1, 2200, 130, 0],
+	[3, 2260, 208, 100], [2, 2520, 176, 0], [1, 2680, 110, 0], [3, 2800, 176, 120],
 ]
-
 @onready var player: Player = $"../Player"
 @onready var camera: Camera2D = $"../Player/Camera"
 @onready var music: AudioStreamPlayer = $"../Music"

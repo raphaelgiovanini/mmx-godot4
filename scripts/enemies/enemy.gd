@@ -1,20 +1,27 @@
 class_name Enemy
 extends Boss
 ## Inimigo comum da fase. Herda de Boss para que tiros, sabre e Giga Crush já o acertem (todos testam
-## `is Boss` e o grupo "boss"); a barra de chefe ignora Enemy. Desenhado em código, sem sprites.
-## Não bloqueia o jogador: encostar tira vida. Só age perto do jogador (fora da tela fica parado).
-##   WALKER  anda de um lado para o outro dentro de `patrol`
-##   FLYER   paira e mergulha no jogador quando ele chega perto
-##   TURRET  parado, atira bolas de energia na direção do jogador
+## `is Boss` e o grupo "boss"); a barra de chefe ignora Enemy. Não bloqueia o jogador: encostar tira vida.
+## Só age perto do jogador. Sprites do mmx8-16bit (tools/install_mmx8_enemies.py).
+##   METOOL  anda até o jogador; de vez em quando se esconde no capacete (tiro ricocheteia)
+##   BATTON  morcego: voa ondulando e mergulha no jogador
+##   TURRET  canhão parado: atira reto ou na diagonal, conforme onde o jogador está
+##   SPIKY   roda de espinhos: rola rápido e volta nas pontas da patrulha
 
-enum Kind { WALKER, FLYER, TURRET }
+enum Kind { METOOL, BATTON, TURRET, SPIKY }
 
+const SHEETS := "res://assets/enemies/"
 const WAKE := 230.0
-const SIZE := {Kind.WALKER: Vector2(22, 22), Kind.FLYER: Vector2(18, 12), Kind.TURRET: Vector2(22, 16)}
-const HP := {Kind.WALKER: 4, Kind.FLYER: 2, Kind.TURRET: 6}
-const OUTLINE := Color8(16, 16, 24)
+const SHEET := {Kind.METOOL: "metool", Kind.BATTON: "batton", Kind.TURRET: "turret", Kind.SPIKY: "spiky"}
+const SIZE := {Kind.METOOL: Vector2(20, 18), Kind.BATTON: Vector2(22, 18), Kind.TURRET: Vector2(24, 24), Kind.SPIKY: Vector2(28, 30)}
+const HP := {Kind.METOOL: 3, Kind.BATTON: 2, Kind.TURRET: 6, Kind.SPIKY: 4}
+## Altura do sprite para os pés ficarem na origem (fundo opaco da folha); BATTON fica centrado.
+const FEET := {Kind.METOOL: -10, Kind.BATTON: 0, Kind.TURRET: -14, Kind.SPIKY: -18}
+const ONCE := [&"defense", &"open", &"turn_to_diagonal", &"turn_to_horizontal", &"shot_horizontal", &"shot_diagonal"]
 
-@export var kind := Kind.WALKER
+static var _sheets := {}
+
+@export var kind := Kind.METOOL
 @export var patrol := 64.0
 @export var contact := 2
 
@@ -22,7 +29,9 @@ var _player: Player
 var _origin := Vector2.ZERO
 var _dir := -1
 var _t := 0
-var _dive := 0     # flyer: frames restantes do mergulho
+var _dive := 0     # batton: frames restantes do mergulho
+var _hide := 0     # metool: frames escondido no capacete
+var _body := AnimatedSprite2D.new()
 
 
 func _ready() -> void:
@@ -37,9 +46,45 @@ func _ready() -> void:
 	var box := RectangleShape2D.new()
 	box.size = SIZE[kind]
 	shape.shape = box
-	shape.position.y = -box.size.y / 2
+	shape.position.y = 0.0 if kind == Kind.BATTON else -box.size.y / 2
 	add_child(shape)
+	_body.sprite_frames = sheet(SHEET[kind])
+	_body.position.y = FEET[kind]
+	add_child(_body)
+	_body.play({Kind.METOOL: &"walk", Kind.BATTON: &"idle", Kind.TURRET: &"shot_horizontal", Kind.SPIKY: &"walk"}[kind])
+	_body.pause()
 	defeated.connect(queue_free)
+
+
+## SpriteFrames de uma folha do Aseprite (PNG + JSON): uma animação por tag, duração em ms.
+static func sheet(name: String) -> SpriteFrames:
+	if _sheets.has(name):
+		return _sheets[name]
+	var tex: Texture2D = load(SHEETS + name + ".png")
+	var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SHEETS + name + ".json"))
+	var list: Array = d["frames"] if d["frames"] is Array else d["frames"].values()
+	var sf := SpriteFrames.new()
+	sf.remove_animation(&"default")
+	for tag in d["meta"]["frameTags"]:
+		var anim := StringName(tag["name"])
+		sf.add_animation(anim)
+		sf.set_animation_speed(anim, 1000.0)
+		sf.set_animation_loop(anim, not anim in ONCE)
+		for i in range(tag["from"], tag["to"] + 1):
+			var r: Dictionary = list[i]["frame"]
+			var at := AtlasTexture.new()
+			at.atlas = tex
+			at.region = Rect2(r["x"], r["y"], r["w"], r["h"])
+			sf.add_frame(anim, at, list[i]["duration"])
+	_sheets[name] = sf
+	return sf
+
+
+## Metool escondido: o tiro ricocheteia (some sem dano).
+func hit(weapon_col: int, multiplier: float) -> bool:
+	if _hide > 0:
+		return true
+	return super(weapon_col, multiplier)
 
 
 func _physics_process(_delta: float) -> void:
@@ -50,81 +95,86 @@ func _physics_process(_delta: float) -> void:
 		_player.add_collision_exception_with(self)
 	_t += 1
 	_invuln = maxi(_invuln - 1, 0)
-	modulate = Color(4, 4, 4) if _invuln > invuln_frames - 3 else Color.WHITE
+	_body.modulate = Color(4, 4, 4) if _invuln > invuln_frames - 3 else Color.WHITE
 	if hp <= 0 or global_position.distance_to(_player.global_position) > WAKE:
-		queue_redraw()
+		_body.pause()
 		return
+	if not _body.is_playing():
+		_body.play()
+	var to_player := _player.global_position - global_position
 	match kind:
-		Kind.WALKER:
-			position.x += _dir * 0.75
+		Kind.METOOL:
+			_metool(to_player)
+		Kind.BATTON:
+			_batton(to_player)
+		Kind.TURRET:
+			_turret(to_player)
+		Kind.SPIKY:
+			position.x += _dir * 1.6
 			if absf(position.x - _origin.x) > patrol:
 				position.x = _origin.x + signf(position.x - _origin.x) * patrol
 				_dir = -_dir
-		Kind.FLYER:
-			var to_player := _player.global_position + Vector2(0, -18) - global_position
-			if _dive == 0 and absf(to_player.x) < 110 and _t % 150 == 0:
-				_dive = 70
-			if _dive > 0:
-				_dive -= 1
-				position += to_player.limit_length(1.6)
-			else:
-				position = position.move_toward(_origin + Vector2(0, sin(_t * 0.06) * 10), 1.0)
-		Kind.TURRET:
-			if _t % 110 == 0:
-				var shot := EnemyShot.new()
-				shot.position = position + Vector2(0, -12)
-				shot.velocity = (_player.global_position + Vector2(0, -16) - global_position).normalized() * 2.0
-				get_parent().add_child(shot)
-	if _hurtbox().intersects(_player_box()):
+			_face(_dir)
+	if _hurtbox().intersects(Rect2(_player.global_position - Vector2(7, 30), Vector2(14, 30))):
 		_player.take_damage(contact)
-	queue_redraw()
+
+
+func _metool(to_player: Vector2) -> void:
+	if _hide > 0:
+		_hide -= 1
+		if _hide == 0:
+			_body.play(&"open")
+			_body.animation_finished.connect(func(): _body.play(&"walk"), CONNECT_ONE_SHOT)
+		return
+	if _t % 150 == 0 and absf(to_player.x) < 120:
+		_hide = 70
+		_body.play(&"defense")
+		return
+	if _body.animation == &"walk":
+		_dir = int(signf(to_player.x)) if absf(to_player.x) > 4 else _dir
+		var nx := position.x + _dir * 0.6
+		if absf(nx - _origin.x) <= patrol:
+			position.x = nx
+		_face(_dir)
+
+
+func _batton(to_player: Vector2) -> void:
+	var target := to_player + Vector2(0, -18)
+	if _dive == 0 and absf(target.x) < 110 and _t % 120 == 0:
+		_dive = 70
+		_body.play(&"jump")
+	if _dive > 0:
+		_dive -= 1
+		position += target.limit_length(1.6)
+		if _dive == 0:
+			_body.play(&"idle")
+	else:
+		position = position.move_toward(_origin + Vector2(sin(_t * 0.03) * 24, sin(_t * 0.06) * 10), 1.0)
+	_face(int(signf(to_player.x)))
+
+
+func _turret(to_player: Vector2) -> void:
+	_face(int(signf(to_player.x)))
+	if _t % 110 != 0:
+		return
+	var aim := to_player + Vector2(0, -16)
+	var diagonal := aim.y < -absf(aim.x) * 0.4
+	_body.play(&"shot_diagonal" if diagonal else &"shot_horizontal")
+	var shot := EnemyShot.new()
+	shot.position = position + Vector2(0, -14)
+	shot.velocity = (Vector2(signf(aim.x), -1).normalized() if diagonal else Vector2(signf(aim.x), 0)) * 2.2
+	get_parent().add_child(shot)
+
+
+## As folhas do mmx8 olham para a esquerda.
+func _face(dir: int) -> void:
+	if dir != 0:
+		_body.flip_h = dir > 0
 
 
 func _hurtbox() -> Rect2:
 	var s: Vector2 = SIZE[kind]
-	return Rect2(global_position - Vector2(s.x / 2, s.y), s)
-
-
-func _player_box() -> Rect2:
-	return Rect2(_player.global_position - Vector2(7, 30), Vector2(14, 30))
-
-
-func _draw() -> void:
-	var step := (_t / 8) % 2
-	match kind:
-		Kind.WALKER:
-			# Mecha de patrulha: corpo azul-aço, visor vermelho e pernas alternando.
-			var face := float(_dir)
-			for leg in [-6, 4]:
-				var lift := 2 if (step == 0) == (leg < 0) else 0
-				draw_rect(Rect2(leg - 1, -8 - lift, 5, 8 + lift), OUTLINE)
-				draw_rect(Rect2(leg, -8 - lift, 3, 7 + lift), Color8(90, 100, 120))
-			draw_rect(Rect2(-11, -23, 22, 16), OUTLINE)
-			draw_rect(Rect2(-10, -22, 20, 14), Color8(72, 112, 176))
-			draw_rect(Rect2(-10, -22, 20, 4), Color8(120, 168, 232))
-			draw_rect(Rect2(face * 3 - 4, -18, 8, 4), Color8(248, 56, 48))
-			draw_rect(Rect2(face * 3 - 2, -17, 3, 2), Color8(255, 220, 200))
-		Kind.FLYER:
-			# Drone-morcego: corpo roxo, asas batendo, olho amarelo.
-			var flap := -6.0 if step == 0 else 2.0
-			for side in [-1, 1]:
-				draw_colored_polygon(PackedVector2Array([Vector2(side * 4, -8), Vector2(side * 14, -8 + flap), Vector2(side * 10, -2)]), Color8(150, 90, 200))
-			draw_circle(Vector2(0, -6), 7, OUTLINE)
-			draw_circle(Vector2(0, -6), 6, Color8(110, 60, 160))
-			draw_circle(Vector2(0, -7), 2.5, Color8(255, 230, 80))
-		Kind.TURRET:
-			# Canhão de cúpula: base cinza, cano mirando o jogador.
-			var aim := Vector2.LEFT
-			if _player:
-				aim = (_player.global_position + Vector2(0, -16) - (global_position + Vector2(0, -10))).normalized()
-			draw_line(Vector2(0, -10), Vector2(0, -10) + aim * 13, OUTLINE, 6)
-			draw_line(Vector2(0, -10), Vector2(0, -10) + aim * 12, Color8(160, 160, 176), 4)
-			draw_circle(Vector2(0, -8), 8, OUTLINE)
-			draw_circle(Vector2(0, -8), 7, Color8(200, 120, 40))
-			draw_rect(Rect2(-11, -5, 22, 5), OUTLINE)
-			draw_rect(Rect2(-10, -4, 20, 4), Color8(110, 110, 124))
-			var glow := 0.5 + 0.5 * sin(_t * 0.15)
-			draw_circle(Vector2(0, -9), 2.5, Color(1, 0.3 + glow * 0.5, 0.2))
+	return Rect2(global_position - Vector2(s.x / 2, s.y / 2 if kind == Kind.BATTON else s.y), s)
 
 
 ## Bola de energia do TURRET: some na parede ou depois de 3 s; tira 2 de vida.

@@ -54,6 +54,7 @@ Sprites, sons e músicas não estão no repositório. Eles são gerados localmen
 próprias cópias dos jogos e de folhas de sprite de referência, com os scripts de `tools/`:
 
 - `tools/export_mmx8_skins.gd`: sprites do X e do Zero (precisa do Godot 3.6 e do projeto mmx8).
+- `tools/install_mmx8_enemies.py`: inimigos do mmx8 (já versionados em `assets/enemies/`).
 - `tools/mesen/`: gravação de tiros e efeitos no emulador Mesen.
 - `tools/cut_*.py`: recorte das gravações e das folhas de sprite.
 
@@ -68,7 +69,9 @@ próprias cópias dos jogos e de folhas de sprite de referência, com os scripts
 
 - **Capcom**: Mega Man X, X2 e X3 e todos os seus personagens e assets.
 - **Projetos de recompilação** do X1 e do X2: referência de comportamento.
-- **mmx8-16bit**: base dos sprites do X e do Zero.
+- **mmx8-16bit** (Alysson da Paz): base dos sprites do X e do Zero e sprites dos inimigos
+  (`assets/enemies/`, versionados com permissão da licença dele: `assets/enemies/LICENSE-mmx8.md`,
+  uso livre sem monetização; por isso este projeto também não aceita doações nem anúncios).
 - **The Spriters Resource**: folhas de sprite de referência (rips de Random Talking Bush e marcosfl).
 
 Se você é detentor de direitos e quer que algo seja removido, abra uma issue.
