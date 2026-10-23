@@ -292,6 +292,10 @@ class IceStatue extends Boss:
 		_sprite.offset.y = -_sprite.sprite_frames.get_frame_texture(&"idle", 0).get_height() / 2.0
 		defeated.connect(queue_free)
 
+	func _explode() -> void:
+		DeathFX.small(get_parent(), global_position + Vector2(0, -16))
+		defeated.emit()
+
 	func _frames() -> SpriteFrames:
 		var sf := SpriteFrames.new()
 		sf.remove_animation(&"default")

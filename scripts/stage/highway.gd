@@ -93,6 +93,23 @@ func _physics_process(_delta: float) -> void:
 		queue_redraw()   # luzes piscando
 
 
+## Atalhos de teste: F3 leva o X até a porta do chefe; F4 vence o chefe na hora (tela final).
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not event.is_pressed() or event.is_echo():
+		return
+	if event.keycode == KEY_F3 and not _arena:
+		player.global_position = Vector2(gate_x - 60, floor_at(gate_x - 60))
+	elif event.keycode == KEY_F4:
+		if not _arena:
+			player.global_position = Vector2(arena.x + 60, boss_at.y)
+			_enter_arena()
+		await get_tree().physics_frame
+		for b in get_tree().get_nodes_in_group(&"boss"):
+			if b is ChillPenguin and b.hp > 0:
+				b._invuln = 0
+				b.hit(-1, 999)
+
+
 ## Fecha a porta atrás do jogador, prende a câmera na arena e chama o chefe.
 func _enter_arena() -> void:
 	_arena = true

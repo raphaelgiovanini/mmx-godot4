@@ -82,6 +82,13 @@ static func sheet(name: String) -> SpriteFrames:
 	return sf
 
 
+## Morte do mmx8 (estouro, pedaços, som) no lugar das partículas do chefe.
+func _explode() -> void:
+	DeathFX.small(get_parent(), global_position + Vector2(0, FEET[kind] if kind != Kind.BATTON else 0),
+		"batton_remains" if kind == Kind.BATTON else "remains")
+	defeated.emit()
+
+
 ## Metool escondido: o tiro ricocheteia (some sem dano).
 func hit(weapon_col: int, multiplier: float) -> bool:
 	if _hide > 0:

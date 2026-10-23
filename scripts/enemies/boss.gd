@@ -89,6 +89,8 @@ func _popup(text: String, c: Color) -> void:
 
 
 func _explode() -> void:
+	if show_bar:
+		DeathFX.big(get_parent(), global_position)
 	for i in 10:
 		var burst := CPUParticles2D.new()
 		burst.global_position = global_position + Vector2(randf_range(-18, 18), randf_range(-36, 0))
