@@ -19,6 +19,8 @@ const RESPAWN_S := 2.5
 @export var invuln_frames := 30   # placeholder; o X1 controla isso em bossHitDetectLoop (84:9B58)
 ## Sala de teste: volta com a vida cheia. Na fase: morre de vez e emite defeated.
 @export var respawn := true
+## Aparece na barra de chefe do HUD (inimigos comuns e estátuas de gelo não).
+@export var show_bar := true
 ## Dano por arma: linha do chefe na tabela 86:EF37 do X1 (colunas ausentes = 1). Ver Projectile.weapon_col
 ## e Weapons.LIST "col". Chill Penguin: Fire Wave (0A) 3, carregado (13) 4; Chameleon Sting carregado (11) 0.
 @export var damage := {0: 1, 1: 2, 2: 3, 3: 3, 4: 32, 5: 2, 6: 2, 10: 3, 16: 2, 17: 0, 18: 2, 19: 4, 20: 2, 21: 2, 22: 2, 23: 2}
@@ -91,6 +93,7 @@ func _explode() -> void:
 		var burst := CPUParticles2D.new()
 		burst.global_position = global_position + Vector2(randf_range(-18, 18), randf_range(-36, 0))
 		burst.one_shot = true
+		burst.emitting = false   # liga no timer abaixo; ligado já no início ele terminava e se apagava antes
 		burst.amount = 12
 		burst.lifetime = 0.5
 		burst.explosiveness = 1.0

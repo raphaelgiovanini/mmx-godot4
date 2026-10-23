@@ -31,13 +31,20 @@ func _run() -> void:
 	_ok(p.global_position.distance_to(Vector2(1420, 176)) < 4, "buraco volta ao checkpoint")
 	p.global_position = Vector2(3060, 176)
 	await _frames(3)
-	var boss: Boss = s.get_children().filter(func(n): return n is Boss and not n is Enemy).front()
+	var boss: Boss = s.get_children().filter(func(n): return n is ChillPenguin).front()
 	_ok(boss != null, "arena chama o chefe")
 	_ok(s.get_node("Player/Camera").limit_left == 3000, "câmera presa na arena")
+	var seen := {}
+	for i in 1500:
+		seen[boss._state] = true
+		await physics_frame
+	_ok(seen.size() >= 6, "chefe usa os golpes (%d estados)" % seen.size())
+	_ok(boss.position.x >= boss.arena.x and boss.position.x <= boss.arena.y and boss.position.y <= 176.5, "chefe fica dentro da arena")
 	boss.hit(-1, 99)
-	await _frames(2)
+	await create_timer(4.0).timeout
 	var clear := s.get_node("Stage").find_children("*", "Label", true, false).any(func(l): return l.text == "STAGE CLEAR")
 	_ok(clear, "chefe vencido dá STAGE CLEAR")
+	_ok(p.cutscene_pose == &"beam", "pose de vitória e teletransporte")
 	print("FALHAS: %d" % failures if failures else "OK: fase 1")
 	quit(1 if failures else 0)
 

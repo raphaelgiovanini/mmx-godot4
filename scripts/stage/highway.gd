@@ -68,8 +68,9 @@ func _enter_arena() -> void:
 	camera.limit_left = int(ARENA.x)
 	camera.limit_right = int(ARENA.y)
 	player.spawn_point = Vector2(ARENA.x + 40, 176)
-	var boss := Boss.new()
+	var boss := ChillPenguin.new()
 	boss.respawn = false
+	boss.arena = Vector2(ARENA.x + 24, ARENA.y - 22)
 	boss.position = BOSS_AT
 	boss.defeated.connect(_stage_clear)
 	get_parent().add_child(boss)
@@ -77,9 +78,19 @@ func _enter_arena() -> void:
 	_banner("WARNING", 1.6, Color8(248, 56, 48))
 
 
+## Vitória como nos originais: espera pisar no chão, pose de vitória e teletransporte para cima.
 func _stage_clear() -> void:
+	music.stop()
+	await get_tree().create_timer(1.2).timeout
+	while not player.is_on_floor():
+		await get_tree().physics_frame
+	player.cutscene_pose = &"victory"
 	music.play_track(MUSIC + "stage_clear.ogg", "")
 	_banner("STAGE CLEAR", 0.0)
+	await get_tree().create_timer(2.2).timeout
+	player.cutscene_pose = &"beam"
+	player.create_tween().tween_property(player, "global_position:y", player.global_position.y - 320, 0.7) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 
 ## Texto grande no meio da tela; some depois de `secs` (0 = fica).

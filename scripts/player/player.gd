@@ -109,6 +109,8 @@ const SHORYUKEN_FRAMES := 30    # placeholder: duração da subida não medida
 ## Energia de cada arma (0..Weapons.MAX_ENERGY), do jogador: todos os personagens usam a mesma.
 var energy := {}
 var spawn_point := Vector2.ZERO
+## Cena (vitória, teletransporte): sem controle, só mostra essa pose.
+var cutscene_pose := &""
 @onready var visual: Node = get_node_or_null(visual_path)
 var saber := Saber.new(self)
 var charge_fx: Node2D = preload("res://scripts/player/charge_fx.gd").new()
@@ -375,6 +377,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if cutscene_pose != &"":
+		if visual:
+			visual.show_state(cutscene_pose, facing)
+			visual.visible = true
+		return
 	if giga_t > 0:
 		giga_t -= 1   # Giga Crush: o X fica parado e invencível
 		return

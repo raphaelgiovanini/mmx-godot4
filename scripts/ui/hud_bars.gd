@@ -43,7 +43,7 @@ func _process(delta: float) -> void:
 ## Primeiro chefe de verdade na cena (inimigos comuns também ficam no grupo "boss" para os tiros).
 func _find_boss() -> Boss:
 	for b in get_tree().get_nodes_in_group(&"boss"):
-		if not b is Enemy:
+		if b.show_bar:
 			return b
 	return null
 

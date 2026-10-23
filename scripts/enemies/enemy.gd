@@ -37,6 +37,7 @@ var _body := AnimatedSprite2D.new()
 func _ready() -> void:
 	add_to_group(&"boss")
 	respawn = false
+	show_bar = false
 	invuln_frames = 6
 	damage = {0: 1, 1: 2, 2: 4, 3: 4, 4: 8}
 	max_hp = HP[kind]
