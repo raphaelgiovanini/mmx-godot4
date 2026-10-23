@@ -2,7 +2,8 @@ extends SubViewportContainer
 ## Tela do jogo: a fase roda num SubViewport no tamanho do SNES (398×224) e é desenhada na janela com o
 ## filtro xBR (scripts/xbr.gdshader), que deixa os contornos lisos. F2 liga e desliga o filtro.
 ## Interface (HUD, menus, avisos: CanvasLayer com layer >= 0) é desenhada direto na janela, fora do
-## filtro e na resolução dela; o céu (layer negativo) fica no SubViewport, atrás da fase.
+## filtro e na resolução dela; o céu (layer negativo) e camadas com meta "pixel" (letreiros em pixel
+## art) ficam no SubViewport.
 ## Este nó roda sempre (process_mode) para continuar passando as teclas ao jogo pausado; a fase
 ## é que pausa (process_mode pausável na instância).
 
@@ -23,7 +24,7 @@ func _fit_text() -> void:
 
 
 func _on_node_added(n: Node) -> void:
-	if n is CanvasLayer and n.layer >= 0 and is_ancestor_of(n):
+	if n is CanvasLayer and n.layer >= 0 and is_ancestor_of(n) and not n.has_meta(&"pixel"):
 		n.custom_viewport = get_viewport()
 
 

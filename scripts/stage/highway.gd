@@ -41,7 +41,7 @@ func _ready() -> void:
 		en.patrol = e[3]
 		get_parent().add_child.call_deferred(en)
 	_build_background()
-	_banner("READY", 1.6)
+	_banner("READY", 2.2)
 
 
 ## Fase do mapa original: colisão do stage.json, inimigos no chão de cada ponto, chefe no trecho final.
@@ -134,7 +134,7 @@ func _enter_arena() -> void:
 	boss.defeated.connect(_stage_clear)
 	get_parent().add_child(boss)
 	music.play_track(MUSIC + "boss_intro.ogg", MUSIC + "boss_loop.ogg")
-	_banner("WARNING", 1.6, Color8(248, 56, 48))
+	_banner("WARNING", 2.2, Color8(248, 56, 48))
 	Sfx.play(self, "DOOR_CLOSE")
 	Sfx.play(self, "BOSS_ALERT")
 
@@ -161,9 +161,22 @@ func _stage_clear() -> void:
 	music.play_track(MUSIC + "weapon_get.ogg", "")
 
 
-## Texto grande no meio da tela; some depois de `secs` (0 = fica).
+## Texto grande no meio da tela; some depois de `secs` (0 = fica). READY e WARNING usam o letreiro
+## animado do mmx8 (assets/fx_mmx8/intro): entra, depois pisca.
 func _banner(text: String, secs: float, color := Color8(248, 248, 248)) -> void:
 	var layer := CanvasLayer.new()
+	if text in ["READY", "WARNING"] and Assets.exists("res://assets/fx_mmx8/intro.png"):
+		var sign := AnimatedSprite2D.new()
+		sign.sprite_frames = Enemy.sheet("intro", "res://assets/fx_mmx8/")
+		sign.position = Vector2(199, 100)
+		var anim := StringName(text.to_lower())
+		sign.play(anim)
+		sign.animation_finished.connect(func(): sign.play(StringName(anim + "_blink")))
+		layer.add_child(sign)
+		layer.set_meta(&"pixel", true)   # pixel art: fica no SubViewport, com o xBR
+		add_child(layer)
+		get_tree().create_timer(secs).timeout.connect(layer.queue_free)
+		return
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_size_override("font_size", 22)

@@ -17,7 +17,7 @@ const SIZE := {Kind.METOOL: Vector2(20, 18), Kind.BATTON: Vector2(22, 18), Kind.
 const HP := {Kind.METOOL: 3, Kind.BATTON: 2, Kind.TURRET: 6, Kind.SPIKY: 4}
 ## Altura do sprite para os pés ficarem na origem (fundo opaco da folha); BATTON fica centrado.
 const FEET := {Kind.METOOL: -10, Kind.BATTON: 0, Kind.TURRET: -14, Kind.SPIKY: -18}
-const ONCE := [&"defense", &"open", &"turn_to_diagonal", &"turn_to_horizontal", &"shot_horizontal", &"shot_diagonal"]
+const ONCE := [&"ready", &"warning", &"defense", &"open", &"turn_to_diagonal", &"turn_to_horizontal", &"shot_horizontal", &"shot_diagonal"]
 
 static var _sheets := {}
 
@@ -58,11 +58,11 @@ func _ready() -> void:
 
 
 ## SpriteFrames de uma folha do Aseprite (PNG + JSON): uma animação por tag, duração em ms.
-static func sheet(name: String) -> SpriteFrames:
-	if _sheets.has(name):
-		return _sheets[name]
-	var tex: Texture2D = load(SHEETS + name + ".png")
-	var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SHEETS + name + ".json"))
+static func sheet(name: String, dir := SHEETS) -> SpriteFrames:
+	if _sheets.has(dir + name):
+		return _sheets[dir + name]
+	var tex: Texture2D = load(dir + name + ".png")
+	var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(dir + name + ".json"))
 	var list: Array = d["frames"] if d["frames"] is Array else d["frames"].values()
 	var sf := SpriteFrames.new()
 	sf.remove_animation(&"default")
@@ -78,7 +78,7 @@ static func sheet(name: String) -> SpriteFrames:
 			at.atlas = tex
 			at.region = Rect2(r["x"], r["y"], r["w"], r["h"])
 			sf.add_frame(anim, at, list[i]["duration"])
-	_sheets[name] = sf
+	_sheets[dir + name] = sf
 	return sf
 
 
