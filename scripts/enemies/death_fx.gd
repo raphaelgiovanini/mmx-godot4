@@ -11,7 +11,7 @@ static var _big: SpriteFrames
 ## Inimigo comum: `remains` é a folha de pedaços (6×3 de 32 px) da cor dele.
 static func small(parent: Node, at: Vector2, remains := "remains") -> void:
 	if _small == null:
-		_small = _grid("explosion.png", 4, 4, 30.0)
+		_small = grid(DIR + "explosion.png", 4, 4, 30.0)
 	var boom := _sprite(_small, at)
 	parent.add_child(boom)
 	var tex := Assets.texture(DIR + remains + ".png")
@@ -42,11 +42,12 @@ static func big(parent: Node, at: Vector2) -> void:
 				_sound(parent, at))
 
 
-static func _grid(file: String, cols: int, rows: int, fps: float) -> SpriteFrames:
+## Folha em grade (colunas × linhas de quadros iguais) como animação "default" de uma vez só.
+static func grid(path: String, cols: int, rows: int, fps: float) -> SpriteFrames:
 	var sf := SpriteFrames.new()
 	sf.set_animation_loop(&"default", false)
 	sf.set_animation_speed(&"default", fps)
-	var tex := Assets.texture(DIR + file)
+	var tex := Assets.texture(path)
 	if tex == null:
 		return sf
 	var size := tex.get_size() / Vector2(cols, rows)
@@ -56,6 +57,21 @@ static func _grid(file: String, cols: int, rows: int, fps: float) -> SpriteFrame
 		at.region = Rect2(Vector2(k % cols, k / cols) * size, size)
 		sf.add_frame(&"default", at)
 	return sf
+
+
+## Morte do X: duas rodas de 8 bolhas de energia (death.png do mmx8) saindo do corpo.
+static func x_death(parent: Node, at: Vector2) -> void:
+	var frames := grid("res://assets/fx_mmx8/death.png", 3, 2, 15.0)
+	frames.set_animation_loop(&"default", true)
+	for ring in [1.3, 2.4]:
+		for k in 8:
+			var orb := Orb.new()
+			orb.sprite_frames = frames
+			orb.position = at
+			orb.velocity = Vector2.RIGHT.rotated(k * TAU / 8 + (0.0 if ring < 2 else TAU / 16)) * ring
+			orb.z_index = 5
+			parent.add_child(orb)
+			orb.play()
 
 
 static func _sprite(frames: SpriteFrames, at: Vector2, anim := &"default") -> AnimatedSprite2D:
@@ -81,6 +97,18 @@ static func _sound(parent: Node, at: Vector2) -> void:
 	p.finished.connect(p.queue_free)
 	parent.add_child(p)
 	p.play()
+
+
+## Bolha da morte do X: anda reto e some depois de 1,5 s.
+class Orb extends AnimatedSprite2D:
+	var velocity := Vector2.ZERO
+	var _t := 0
+
+	func _physics_process(_delta: float) -> void:
+		_t += 1
+		position += velocity
+		if _t > 90:
+			queue_free()
 
 
 ## Pedaço que voa, gira, cai e some.

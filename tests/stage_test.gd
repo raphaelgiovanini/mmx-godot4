@@ -29,7 +29,7 @@ func _run() -> void:
 	p.global_position = cp
 	await _frames(3)
 	p.global_position = Vector2(cp.x, st.pit_y + 20)
-	await _frames(2)
+	await _frames(p.DEATH_FRAMES + 4)
 	_ok(p.global_position.distance_to(cp) < 4, "buraco volta ao checkpoint")
 	p.global_position = Vector2(st.arena.x + 60, st.boss_at.y)
 	await _frames(3)

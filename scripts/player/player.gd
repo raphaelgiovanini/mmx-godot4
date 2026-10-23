@@ -111,6 +111,8 @@ var energy := {}
 var spawn_point := Vector2.ZERO
 ## Cena (vitória, teletransporte): sem controle, só mostra essa pose.
 var cutscene_pose := &""
+const DEATH_FRAMES := 100
+var _dead := 0
 @onready var visual: Node = get_node_or_null(visual_path)
 var saber := Saber.new(self)
 var charge_fx: Node2D = preload("res://scripts/player/charge_fx.gd").new()
@@ -173,9 +175,19 @@ func take_damage(amount: int) -> void:
 		die()
 
 
-## ponytail: sem animação de morte; volta ao checkpoint (spawn_point) com a barra cheia.
+## Morte: o X some numa explosão de bolhas de energia (mmx8) e, depois de DEATH_FRAMES, volta ao
+## checkpoint (spawn_point) com a barra cheia.
 func die() -> void:
+	if _dead > 0:
+		return
 	Sfx.play(self, "X_DIE")
+	_dead = DEATH_FRAMES
+	vx = 0.0
+	vy = 0.0
+	DeathFX.x_death(get_parent(), global_position + Vector2(0, -16))
+
+
+func _respawn() -> void:
 	hp[health_id()] = max_hp()
 	shield = Shield.NONE
 	global_position = spawn_point
@@ -379,6 +391,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if _dead > 0:
+		_dead -= 1
+		if visual:
+			visual.visible = false
+		if _dead == 0:
+			_respawn()
+		return
 	if cutscene_pose != &"":
 		if visual:
 			visual.show_state(cutscene_pose, facing)

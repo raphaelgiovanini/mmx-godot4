@@ -1,13 +1,16 @@
 extends Node2D
 ## Efeitos de movimento, separados da física: rastro de imagens (estilo X4–X8), faísca e fumaça do dash,
-## fumaça de deslizar e faísca do pulo na parede (sprites dos originais, tools/cut_ref_sheets.py) e câmera
-## adiantada na direção do movimento. Lê o estado do Player pai; não altera a física.
+## fumaça de deslizar e faísca do pulo na parede (sprites dos originais, tools/cut_ref_sheets.py; sem eles,
+## os do mmx8 em assets/fx_mmx8) e câmera adiantada na direção do movimento. Lê o estado do Player pai.
 
 const GHOST_EVERY := 2      # frames entre imagens do rastro
 const GHOST_LIFE := 12      # frames até a imagem sumir
 const DUST_EVERY := 6
 const LOOKAHEAD := 48.0     # px que a câmera adianta durante o dash
 const LOOKAHEAD_EASE := 0.12
+## Efeito -> [folha do mmx8, colunas, linhas]
+const MMX8 := {&"dash_spark": ["dash", 3, 2], &"dash_smoke": ["smoke", 3, 3], &"wall_slide": ["sparks", 3, 2],
+	&"wall_kick": ["small_smoke", 3, 2]}
 
 @export var camera_path: NodePath
 
@@ -87,6 +90,10 @@ func _spawn(fx_name: StringName, offset: Vector2, side: int) -> void:
 		while Assets.exists(path % [fx_name, k]):
 			frames.add_frame(&"default", Assets.texture(path % [fx_name, k]))
 			k += 1
+		if k == 0 and MMX8.has(fx_name):
+			var m: Array = MMX8[fx_name]
+			frames = DeathFX.grid("res://assets/fx_mmx8/%s.png" % m[0], m[1], m[2], 20.0)
+			k = frames.get_frame_count(&"default")
 		_fx[fx_name] = frames if k > 0 else null
 	if _fx[fx_name] == null:
 		return
