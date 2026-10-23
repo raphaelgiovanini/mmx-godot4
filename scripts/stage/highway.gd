@@ -158,7 +158,8 @@ func _stage_clear() -> void:
 	get_screen.weapon = Weapons.LIST.filter(func(w): return w.id == "shotgun_ice")[0]
 	get_screen.character_id = player.character_id
 	get_screen.art = _victory_art()
-	get_screen.tint = player.character_id == "x"
+	get_screen.tint = {"x": {"hue": 0.64, "width": 0.14, "sat": 0.25},
+		"zero": {"hue": 0.985, "width": 0.045, "sat": 0.55}}.get(player.character_id, {})
 	add_child(get_screen)
 	music.play_track(MUSIC + "weapon_get.ogg", "")
 

@@ -1,8 +1,11 @@
 shader_type canvas_item;
-// Armadura na cor da arma: troca o matiz dos azuis (e a saturação, para armas cinza/brancas) pela cor
-// alvo, mantendo o brilho de cada pixel. Pele, branco, vermelho e contornos ficam como estão.
+// Armadura na cor da arma: troca o matiz da cor da armadura (azul no X, vermelho no Zero) pela cor alvo,
+// mantendo o brilho de cada pixel. Pele, cabelo, branco e contornos ficam como estão.
 uniform vec4 target : source_color = vec4(0.3, 0.6, 1.0, 1.0);
 uniform float amount : hint_range(0.0, 1.0) = 0.0;
+uniform float source_hue = 0.64;     // matiz da armadura (0..1)
+uniform float hue_width = 0.14;      // quanto em volta dele conta como armadura
+uniform float min_sat = 0.25;        // abaixo disso (pele, branco, cinza) não troca
 
 vec3 rgb2hsv(vec3 c) {
 	vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -21,7 +24,8 @@ void fragment() {
 	vec4 c = texture(TEXTURE, UV);
 	vec3 hsv = rgb2hsv(c.rgb);
 	vec3 t = rgb2hsv(target.rgb);
-	if (hsv.y > 0.25 && hsv.x > 0.5 && hsv.x < 0.78) {
+	float dh = abs(fract(hsv.x - source_hue + 0.5) - 0.5);
+	if (hsv.y > min_sat && dh < hue_width) {
 		vec3 swapped = hsv2rgb(vec3(t.x, hsv.y * min(1.0, t.y * 1.3), hsv.z));
 		c.rgb = mix(c.rgb, swapped, amount);
 	}

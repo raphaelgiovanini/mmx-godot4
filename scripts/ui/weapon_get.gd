@@ -10,8 +10,9 @@ var weapon: Dictionary
 var character_id := "x"
 ## Arte grande de quem venceu (escolhida pela fase); null = sprite do jogo ampliado.
 var art: Texture2D
-## Pinta a armadura na cor da arma (só o X: é o azul dele que vira a cor da arma).
-var tint := true
+## Pinta a armadura na cor da arma: matiz, largura e saturação mínima da cor que troca (X azul, Zero
+## vermelho). Vazio = não pinta.
+var tint := {"hue": 0.64, "width": 0.14, "sat": 0.25}
 
 var _t := 0.0
 var _hero: CanvasItem
@@ -46,9 +47,12 @@ func _ready() -> void:
 		big.scale = Vector2(k, k)
 		big.position = Vector2(100, 224 - art.get_height() * k / 2.0)
 		big.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS if k < 1.0 else CanvasItem.TEXTURE_FILTER_NEAREST
-		if tint:
+		if not tint.is_empty():
 			_tint.shader = preload("res://scripts/ui/weapon_color.gdshader")
 			_tint.set_shader_parameter(&"target", weapon.color)
+			_tint.set_shader_parameter(&"source_hue", tint.hue)
+			_tint.set_shader_parameter(&"hue_width", tint.width)
+			_tint.set_shader_parameter(&"min_sat", tint.sat)
 			big.material = _tint
 		_hero = big
 	else:
