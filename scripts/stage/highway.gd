@@ -91,6 +91,12 @@ func _stage_clear() -> void:
 	player.cutscene_pose = &"beam"
 	player.create_tween().tween_property(player, "global_position:y", player.global_position.y - 320, 0.7) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	await get_tree().create_timer(1.0).timeout
+	var get_screen := preload("res://scripts/ui/weapon_get.gd").new()
+	get_screen.weapon = Weapons.LIST.filter(func(w): return w.id == "shotgun_ice")[0]
+	get_screen.character_id = player.character_id
+	add_child(get_screen)
+	music.play_track(MUSIC + "weapon_get.ogg", "")
 
 
 ## Texto grande no meio da tela; some depois de `secs` (0 = fica).

@@ -45,6 +45,8 @@ func _run() -> void:
 	var clear := s.get_node("Stage").find_children("*", "Label", true, false).any(func(l): return l.text == "STAGE CLEAR")
 	_ok(clear, "chefe vencido dá STAGE CLEAR")
 	_ok(p.cutscene_pose == &"beam", "pose de vitória e teletransporte")
+	await create_timer(2.0).timeout
+	_ok(s.get_node("Stage").get_children().any(func(n): return n.get(&"weapon") is Dictionary), "tela de WEAPON GET")
 	print("FALHAS: %d" % failures if failures else "OK: fase 1")
 	quit(1 if failures else 0)
 
