@@ -32,10 +32,20 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if boss_mode:
+		if boss == null or not is_instance_valid(boss):
+			boss = _find_boss()
 		visible = boss != null
 		if boss:
 			_shown = minf(_shown + delta * 30.0, boss.hp) if _shown < boss.hp else float(boss.hp)
 	queue_redraw()
+
+
+## Primeiro chefe de verdade na cena (inimigos comuns também ficam no grupo "boss" para os tiros).
+func _find_boss() -> Boss:
+	for b in get_tree().get_nodes_in_group(&"boss"):
+		if not b is Enemy:
+			return b
+	return null
 
 
 func _draw() -> void:

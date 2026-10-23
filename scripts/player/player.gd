@@ -5,6 +5,7 @@ extends CharacterBody2D
 ## O visual é um nó filho trocável ("Visual") com show_state(pose, facing): sprite hoje, 2.5D depois.
 
 signal character_changed(character: Dictionary)
+signal died
 
 enum State { IDLE, WALK, AIR, DASH, WALL_SLIDE }
 
@@ -114,6 +115,7 @@ var charge_fx: Node2D = preload("res://scripts/player/charge_fx.gd").new()
 
 
 func _ready() -> void:
+	add_to_group(&"player")
 	spawn_point = global_position
 	add_child(charge_fx)
 	set_character(character_id)
@@ -165,12 +167,17 @@ func take_damage(amount: int) -> void:
 	hp[id] = maxi(0, hp.get(id, max_hp()) - _reduced(amount))
 	invuln = INVULN_FRAMES
 	if hp[id] == 0:
-		# ponytail: sem animação de morte; volta ao início com a barra cheia.
-		hp[id] = max_hp()
-		shield = Shield.NONE
-		global_position = spawn_point
-		vx = 0.0
-		vy = 0.0
+		die()
+
+
+## ponytail: sem animação de morte; volta ao checkpoint (spawn_point) com a barra cheia.
+func die() -> void:
+	hp[health_id()] = max_hp()
+	shield = Shield.NONE
+	global_position = spawn_point
+	vx = 0.0
+	vy = 0.0
+	died.emit()
 
 
 ## Dano depois da armadura, como cada jogo faz na ROM (X1 84:9D41 arredonda para cima pelo stat).

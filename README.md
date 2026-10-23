@@ -17,7 +17,8 @@ limite: a ideia é manter a sensação dos clássicos e melhorar gráficos, tiro
 - **24 armas de chefe** do X1, X2 e X3, com energia própria e mapa de fraquezas no menu.
 - **Especiais na tecla F:** Hadouken, Shoryuken e Giga Crush.
 - **Menu de pausa** com abas de armadura, armas e itens (Heart Tanks e Sub-Tanks).
-- **Chill Penguin** como chefe de teste, com a tabela de dano do X1.
+- **Fase 1: Central Highway** refeita: rodovia à noite com parallax, buracos, checkpoint, 3 tipos de
+  inimigo e arena final com o **Chill Penguin** (tabela de dano do X1; ainda sem IA).
 
 Em andamento: IA dos chefes, fases e as demais armas como projéteis de verdade.
 O plano está em `docs/roteiro-3-em-1.md`.
@@ -41,9 +42,10 @@ O plano está em `docs/roteiro-3-em-1.md`.
 Precisa do **Godot 4.7.2** (`godot` no PATH).
 
 ```sh
-godot --path .                                               # sala de teste
+godot --path .                                               # fase 1
 godot --headless --path . -s res://tests/physics_test.gd     # física conferida com a ROM
 godot --headless --path . -s res://tests/weapons_test.gd     # tiros
+godot --headless --path . -s res://tests/stage_test.gd       # fase 1
 ```
 
 ### Assets (não versionados)

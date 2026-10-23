@@ -4,7 +4,7 @@ config_version=5
 [application]
 
 config/name="Mega Man X + X2 (Godot 4)"
-run/main_scene="res://scenes/stages/test_room.tscn"
+run/main_scene="res://scenes/stages/highway.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [display]

@@ -9,6 +9,15 @@ extends AudioStreamPlayer
 func _ready() -> void:
 	volume_db = -8.0
 	process_mode = Node.PROCESS_MODE_ALWAYS   # continua no menu de pausa, como nos originais
+	play_track(intro, loop)
+
+
+## Troca a música: toca `intro_path` uma vez e depois `loop_path` em loop (vazio = só a intro).
+func play_track(intro_path: String, loop_path: String) -> void:
+	intro = intro_path
+	loop = loop_path
+	if finished.is_connected(_play_loop):
+		finished.disconnect(_play_loop)
 	var first := _load(intro)
 	if first == null:
 		_play_loop()

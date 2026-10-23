@@ -1,0 +1,50 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/stage/highway.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/player/dash_fx.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/ui/hud_bars.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/stage/music.gd" id="9"]
+
+[node name="Highway" type="Node2D"]
+
+[node name="Music" type="AudioStreamPlayer" parent="."]
+script = ExtResource("9")
+intro = "res://assets/music/stage_intro.ogg"
+loop = "res://assets/music/stage_loop.ogg"
+
+[node name="Stage" type="Node2D" parent="."]
+script = ExtResource("1")
+blocks = Array[Rect2]([Rect2(-32, -200, 32, 456), Rect2(0, 176, 620, 80), Rect2(676, 176, 644, 80), Rect2(860, 152, 56, 24), Rect2(1100, 136, 72, 40), Rect2(1408, 176, 672, 80), Rect2(1640, 128, 96, 12), Rect2(1790, 84, 80, 12), Rect2(1900, 104, 24, 72), Rect2(2080, 208, 320, 48), Rect2(2400, 176, 998, 80), Rect2(2600, 152, 64, 24), Rect2(3398, -200, 32, 456)])
+
+[node name="Player" parent="." instance=ExtResource("2")]
+position = Vector2(48, 176)
+
+[node name="Camera" type="Camera2D" parent="Player"]
+position = Vector2(0, -24)
+limit_left = -32
+limit_top = -200
+limit_right = 3398
+limit_bottom = 232
+position_smoothing_enabled = false
+
+[node name="DashFX" type="Node2D" parent="Player"]
+script = ExtResource("4")
+camera_path = NodePath("../Camera")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("3")
+player_path = NodePath("../Player")
+
+[node name="Health" type="Control" parent="HUD"]
+script = ExtResource("6")
+
+[node name="BossBar" type="Control" parent="HUD"]
+script = ExtResource("6")
+boss_mode = true
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+script = ExtResource("5")
+player_path = NodePath("../Player")

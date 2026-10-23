@@ -6,9 +6,9 @@ extends StaticBody2D
 ## Ao zerar: explosão e volta com a vida cheia depois de um tempo.
 
 signal hp_changed(hp: int, max_hp: int)
+signal defeated
 
 const ROOT := "res://assets/bosses/"
-const INVULN_FRAMES := 30   # placeholder; o X1 controla isso em bossHitDetectLoop (84:9B58)
 const RESPAWN_S := 2.5
 
 @export var boss_id := "chill_penguin"
@@ -16,6 +16,9 @@ const RESPAWN_S := 2.5
 @export var emblem := "C"
 @export var color := Color("7fd0ff")
 @export var max_hp := 32
+@export var invuln_frames := 30   # placeholder; o X1 controla isso em bossHitDetectLoop (84:9B58)
+## Sala de teste: volta com a vida cheia. Na fase: morre de vez e emite defeated.
+@export var respawn := true
 ## Dano por arma: linha do chefe na tabela 86:EF37 do X1 (colunas ausentes = 1). Ver Projectile.weapon_col
 ## e Weapons.LIST "col". Chill Penguin: Fire Wave (0A) 3, carregado (13) 4; Chameleon Sting carregado (11) 0.
 @export var damage := {0: 1, 1: 2, 2: 3, 3: 3, 4: 32, 5: 2, 6: 2, 10: 3, 16: 2, 17: 0, 18: 2, 19: 4, 20: 2, 21: 2, 22: 2, 23: 2}
@@ -47,8 +50,8 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	_invuln = maxi(_invuln - 1, 0)
 	# Clarão branco nos primeiros frames do acerto (modulate acima de 1 clareia o sprite).
-	_sprite.modulate = Color(4, 4, 4) if _invuln > INVULN_FRAMES - 4 else Color.WHITE
-	_sprite.visible = hp > 0 and (_invuln == 0 or (_invuln / 2) % 2 == 0 or _invuln > INVULN_FRAMES - 4)
+	_sprite.modulate = Color(4, 4, 4) if _invuln > invuln_frames - 4 else Color.WHITE
+	_sprite.visible = hp > 0 and (_invuln == 0 or (_invuln / 2) % 2 == 0 or _invuln > invuln_frames - 4)
 
 
 ## Chamado pelo tiro. Devolve true se o tiro deve sumir (acertou).
@@ -59,7 +62,7 @@ func hit(weapon_col: int, multiplier: float) -> bool:
 		return true
 	var dmg := maxi(0, roundi(damage.get(weapon_col, 1) * multiplier))
 	hp = maxi(hp - dmg, 0)
-	_invuln = INVULN_FRAMES
+	_invuln = invuln_frames
 	_popup(str(dmg), Color(1, 0.95, 0.5) if dmg >= 3 else Color.WHITE)
 	hp_changed.emit(hp, max_hp)
 	if hp == 0:
@@ -101,6 +104,9 @@ func _explode() -> void:
 		get_parent().add_child(burst)
 		get_tree().create_timer(i * 0.08).timeout.connect(func(): burst.emitting = true)
 		burst.finished.connect(burst.queue_free)
+	if not respawn:
+		defeated.emit()
+		return
 	get_tree().create_timer(RESPAWN_S).timeout.connect(func():
 		hp = max_hp
 		hp_changed.emit(hp, max_hp))
