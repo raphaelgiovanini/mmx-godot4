@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1"]
+[ext_resource type="Shader" path="res://scripts/xbr.gdshader" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/stages/highway.tscn" id="3"]
+
+[sub_resource type="ShaderMaterial" id="xbr"]
+shader = ExtResource("2")
+shader_parameter/enabled = true
+
+[node name="Main" type="SubViewportContainer"]
+material = SubResource("xbr")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+stretch = true
+script = ExtResource("1")
+
+[node name="View" type="SubViewport" parent="."]
+handle_input_locally = false
+size = Vector2i(398, 224)
+render_target_update_mode = 4
+
+[node name="Highway" parent="View" instance=ExtResource("3")]

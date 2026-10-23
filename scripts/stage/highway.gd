@@ -285,7 +285,7 @@ func _build_background() -> void:
 	get_parent().add_child.call_deferred(_city(0.4, 2, Color8(22, 24, 52), 80.0, 7))
 
 
-## Faixas de 1024 px ampliadas 3x (Scale3x), desenhadas a 1/3 com filtro linear: contorno liso.
+## Faixas de 1024 px ampliadas 3x, desenhadas a 1/3 sem filtro (volta o pixel original; o xBR da tela suaviza).
 func _strips(layer: String, at: Vector2) -> Node2D:
 	var root := Node2D.new()
 	root.position = at
@@ -295,7 +295,6 @@ func _strips(layer: String, at: Vector2) -> Node2D:
 		sp.centered = false
 		sp.scale = Vector2.ONE / float(_map.scale)
 		sp.position.x = i * float(_map.strip)
-		sp.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		root.add_child(sp)
 	return root
 
