@@ -9,6 +9,14 @@
 Uma homenagem a **Mega Man X**, **X2** e **X3** (SNES) num jogo só. Os originais são a base, não o
 limite: a ideia é manter a sensação dos clássicos e melhorar gráficos, tiros e jogabilidade.
 
+## Jogar
+
+**No navegador:** https://raphaelgiovanini.github.io/mmx-godot4/ (computador, com teclado ou controle).
+
+O build público leva só arte liberada (mmx8-16bit); no lugar do Chill Penguin, que vem da ROM, o
+chefe é o Avalanche Yeti do mmx8. Para publicar de novo: exportar o preset "Web" de um checkout limpo
+(sem os assets locais) e subir `build/web` na branch `gh-pages`.
+
 ## O que já tem
 
 - **X e Zero** jogáveis, com a física medida nas ROMs (pulo, dash, parede, carga).
