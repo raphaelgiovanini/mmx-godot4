@@ -53,6 +53,7 @@ func _ready() -> void:
 			_tint.set_shader_parameter(&"source_hue", tint.hue)
 			_tint.set_shader_parameter(&"hue_width", tint.width)
 			_tint.set_shader_parameter(&"min_sat", tint.sat)
+			_two_tone()
 			big.material = _tint
 		_hero = big
 	else:
@@ -77,6 +78,27 @@ func _ready() -> void:
 	_flash.color = Color(1, 1, 1, 0)
 	_flash.size = SIZE
 	add_child(_flash)
+
+
+## X: as duas cores da paleta da arma (a mesma do sprite do jogo), lidas de palettes.json pelas cores
+## de origem do X: azul escuro/azul da armadura e azul-claro/azul-pálido.
+func _two_tone() -> void:
+	if character_id != "x":
+		return
+	var pals = JSON.parse_string(FileAccess.get_file_as_string("res://assets/weapons/palettes.json"))
+	if pals == null or not pals.has(weapon.id):
+		return
+	var map := {}
+	for i in pals[weapon.id][0].size():
+		var s: Array = pals[weapon.id][0][i]
+		var t: Array = pals[weapon.id][1][i]
+		map[Color8(s[0], s[1], s[2])] = Color8(t[0], t[1], t[2])
+	var pick := func(r, g, b): return map.get(Color8(r, g, b), Color8(r, g, b))
+	_tint.set_shader_parameter(&"two_tone", true)
+	_tint.set_shader_parameter(&"main_dark", pick.call(32, 48, 128))
+	_tint.set_shader_parameter(&"main_light", pick.call(0, 128, 248))
+	_tint.set_shader_parameter(&"light_dark", pick.call(80, 160, 240))
+	_tint.set_shader_parameter(&"light_light", pick.call(120, 216, 240))
 
 
 func _label(text: String, size: int, color: Color) -> Label:

@@ -6,6 +6,14 @@ uniform float amount : hint_range(0.0, 1.0) = 0.0;
 uniform float source_hue = 0.64;     // matiz da armadura (0..1)
 uniform float hue_width = 0.14;      // quanto em volta dele conta como armadura
 uniform float min_sat = 0.25;        // abaixo disso (pele, branco, cinza) não troca
+// Duas cores, como as paletas do X1–X3 (assets/weapons/palettes.json): azul da armadura -> main (escuro ao
+// claro), azul-claro (matiz abaixo de split) -> light. O brilho do pixel escolhe o ponto do degradê.
+uniform bool two_tone = false;
+uniform float split = 0.6;
+uniform vec4 main_dark : source_color;
+uniform vec4 main_light : source_color;
+uniform vec4 light_dark : source_color;
+uniform vec4 light_light : source_color;
 
 vec3 rgb2hsv(vec3 c) {
 	vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -27,6 +35,10 @@ void fragment() {
 	float dh = abs(fract(hsv.x - source_hue + 0.5) - 0.5);
 	if (hsv.y > min_sat && dh < hue_width) {
 		vec3 swapped = hsv2rgb(vec3(t.x, hsv.y * min(1.0, t.y * 1.3), hsv.z));
+		if (two_tone) {
+			swapped = hsv.x < split ? mix(light_dark.rgb, light_light.rgb, smoothstep(0.55, 0.98, hsv.z))
+				: mix(main_dark.rgb, main_light.rgb, smoothstep(0.3, 0.95, hsv.z));
+		}
 		c.rgb = mix(c.rgb, swapped, amount);
 	}
 	COLOR = c;
