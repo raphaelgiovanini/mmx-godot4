@@ -168,12 +168,14 @@ func take_damage(amount: int) -> void:
 	var id := health_id()
 	hp[id] = maxi(0, hp.get(id, max_hp()) - _reduced(amount))
 	invuln = INVULN_FRAMES
+	Sfx.play(self, "DAMAGE")
 	if hp[id] == 0:
 		die()
 
 
 ## ponytail: sem animação de morte; volta ao checkpoint (spawn_point) com a barra cheia.
 func die() -> void:
+	Sfx.play(self, "X_DIE")
 	hp[health_id()] = max_hp()
 	shield = Shield.NONE
 	global_position = spawn_point
@@ -438,6 +440,7 @@ func _ground(dir: int) -> void:
 	if Input.is_action_just_pressed(&"jump"):
 		_jump(false)
 	elif Input.is_action_just_pressed(&"dash") and can_dash():
+		Sfx.play(self, "DASH")
 		state = State.DASH
 		dash_timer = _frames(DASH_FRAMES)
 
@@ -461,6 +464,7 @@ func _dash(dir: int) -> void:
 
 func _air(dir: int) -> void:
 	if is_on_floor() and vy <= 0.0:
+		Sfx.play(self, "LAND", -6.0)
 		dash_momentum = false
 		state = State.IDLE
 		_ground(dir)
@@ -524,6 +528,7 @@ func _air(dir: int) -> void:
 ## O primeiro frame do pulo sobe JUMP inteiro; a gravidade começa no frame seguinte.
 ## A ordem exata no SNES (velocidade antes ou depois da gravidade) ainda não foi conferida na ROM.
 func _jump(from_dash: bool) -> void:
+	Sfx.play(self, "JUMP")
 	dash_momentum = from_dash
 	vy = _jump_speed()
 	state = State.AIR
@@ -536,6 +541,7 @@ func _enter_air(from_dash: bool) -> void:
 
 
 func _wall_jump(wall: int) -> void:
+	Sfx.play(self, "JUMP")
 	dash_momentum = Input.is_action_pressed(&"dash")
 	kick_dir = -wall
 	kick_timer = _frames(WALL_KICK_FRAMES)

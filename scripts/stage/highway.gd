@@ -135,6 +135,8 @@ func _enter_arena() -> void:
 	get_parent().add_child(boss)
 	music.play_track(MUSIC + "boss_intro.ogg", MUSIC + "boss_loop.ogg")
 	_banner("WARNING", 1.6, Color8(248, 56, 48))
+	Sfx.play(self, "DOOR_CLOSE")
+	Sfx.play(self, "BOSS_ALERT")
 
 
 ## Vitória como nos originais: espera pisar no chão, pose de vitória e teletransporte para cima.
@@ -148,6 +150,7 @@ func _stage_clear() -> void:
 	_banner("STAGE CLEAR", 0.0)
 	await get_tree().create_timer(2.2).timeout
 	player.cutscene_pose = &"beam"
+	Sfx.play(self, "TELEPORT")
 	player.create_tween().tween_property(player, "global_position:y", player.global_position.y - 320, 0.7) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	await get_tree().create_timer(1.0).timeout

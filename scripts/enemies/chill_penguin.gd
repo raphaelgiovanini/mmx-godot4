@@ -293,6 +293,7 @@ class IceStatue extends Boss:
 		defeated.connect(queue_free)
 
 	func _explode() -> void:
+		Sfx.play(self, "ICE_BREAK")
 		DeathFX.small(get_parent(), global_position + Vector2(0, -16))
 		defeated.emit()
 

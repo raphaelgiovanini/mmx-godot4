@@ -92,6 +92,7 @@ func _explode() -> void:
 ## Metool escondido: o tiro ricocheteia (some sem dano).
 func hit(weapon_col: int, multiplier: float) -> bool:
 	if _hide > 0:
+		Sfx.play(self, "DEFLECT", -4.0)
 		return true
 	return super(weapon_col, multiplier)
 

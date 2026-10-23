@@ -65,6 +65,7 @@ func hit(weapon_col: int, multiplier: float) -> bool:
 	var dmg := maxi(0, roundi(damage.get(weapon_col, 1) * multiplier))
 	hp = maxi(hp - dmg, 0)
 	_invuln = invuln_frames
+	Sfx.play(self, "HIT_BOSS" if show_bar else "HIT", -4.0)
 	_popup(str(dmg), Color(1, 0.95, 0.5) if dmg >= 3 else Color.WHITE)
 	hp_changed.emit(hp, max_hp)
 	if hp == 0:
@@ -91,6 +92,7 @@ func _popup(text: String, c: Color) -> void:
 func _explode() -> void:
 	if show_bar:
 		DeathFX.big(get_parent(), global_position)
+		Sfx.play(self, "BOSS_DEATH")
 	for i in 10:
 		var burst := CPUParticles2D.new()
 		burst.global_position = global_position + Vector2(randf_range(-18, 18), randf_range(-36, 0))
