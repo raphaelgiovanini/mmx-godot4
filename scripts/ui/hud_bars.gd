@@ -112,7 +112,7 @@ func _vbar(top: Vector2, units: int, filled: int, fill: Color, icon: Texture2D) 
 func _image(path: String, region: Rect2i) -> Texture2D:
 	var key := path + str(region)
 	if not _tex.has(key):
-		var img := Image.load_from_file(path) if FileAccess.file_exists(path) else null
+		var img := Assets.image(path)
 		if img:
 			if region.size != Vector2i.ZERO:
 				img = img.get_region(region)

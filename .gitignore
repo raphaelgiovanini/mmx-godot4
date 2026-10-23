@@ -7,16 +7,18 @@ extracted/
 .godot/
 export/
 build/
-# Sprites dos personagens (IP da Capcom / ripadores): gerados por tools/export_mmx8_skins.gd
-assets/characters/
-assets/shots/
+# Tirados das ROMs ou do Spriters Resource: ficam só na máquina (tools/ gera de novo).
+# O que vem do mmx8-16bit (personagens, sons, músicas, tiro, inimigos) vai para o git: a licença
+# dele permite redistribuir sem fins lucrativos (assets/enemies/LICENSE-mmx8.md).
+assets/shots/*
+!assets/shots/mmx8/
 assets/bosses/
 assets/armor_parts/
-assets/sfx/
 assets/art/
 assets/charge/
-assets/weapons/
+assets/weapons/*
+!assets/weapons/palettes.json
 assets/ref/
-assets/fx/
-assets/music/
+assets/fx/*
+!assets/fx/emblem_x.png
 __pycache__/

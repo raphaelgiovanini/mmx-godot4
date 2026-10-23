@@ -56,7 +56,7 @@ func _icon(w: Dictionary) -> Texture2D:
 	if not _icons.has(w.id):
 		var tex: Texture2D = null
 		# Ícone original do menu de cada jogo (tools/cut_ref_sheets.py); o buster usa o do X1.
-		var icon := Image.load_from_file("res://assets/weapons/icons/%s_%s.png" % [w.game if w.game != "" else "x1", w.id])
+		var icon := Assets.image("res://assets/weapons/icons/%s_%s.png" % [w.game if w.game != "" else "x1", w.id])
 		var f := {"normal": []} if icon else Weapons.frames(w)
 		if icon:
 			tex = ImageTexture.create_from_image(icon)

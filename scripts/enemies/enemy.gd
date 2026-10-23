@@ -70,7 +70,8 @@ static func sheet(name: String) -> SpriteFrames:
 		var anim := StringName(tag["name"])
 		sf.add_animation(anim)
 		sf.set_animation_speed(anim, 1000.0)
-		sf.set_animation_loop(anim, not anim in ONCE)
+		sf.set_animation_loop(anim, not (anim in ONCE or tag["name"].contains("prepare") or tag["name"].ends_with("land")
+			or tag["name"].ends_with("_end") or tag["name"].ends_with("_up") or tag["name"].ends_with("fall")))
 		for i in range(tag["from"], tag["to"] + 1):
 			var r: Dictionary = list[i]["frame"]
 			var at := AtlasTexture.new()

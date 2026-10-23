@@ -1,6 +1,8 @@
 class_name ChillPenguin
 extends Boss
 ## Chill Penguin (X1) lutando, com as poses gravadas no Mesen (assets/bosses/chill_penguin/poses/).
+## Sem as poses (build público: elas vêm da ROM e não vão para o git), luta com a mesma IA usando o
+## Avalanche Yeti do mmx8 (assets/enemies/yeti, arte liberada pela licença do mmx8).
 ## Golpes do original: tiro de gelo, deslizar de barriga, sopro que cria estátuas de gelo e pulo;
 ## depois de alguns golpes, nevasca que empurra o X para a parede. Tempos e velocidades são
 ## placeholders (a IA da ROM ainda não foi desmontada); dano por arma continua o da tabela do X1.
@@ -11,6 +13,13 @@ const ANIMS := {
 	&"slide": [[21, 22], 10], &"breath": [[65, 66, 67, 68, 69, 70], 12], &"jump": [[6], 1],
 	&"fall": [[7], 1], &"land": [[8, 9], 10], &"blizzard": [[51, 52, 53, 54], 8], &"statue": [[72], 1],
 }
+## Pose do pinguim -> animação do Yeti (tags do Aseprite do mmx8).
+const YETI := {
+	&"idle": &"idle", &"aim": &"icespikes_prepare", &"throw": &"icespikes", &"dive": &"icedash_prepare",
+	&"slide": &"icedash_loop", &"breath": &"icestomp", &"jump": &"icejump_up", &"fall": &"icejump_fall",
+	&"land": &"icejump_land", &"blizzard": &"icestorm_loop",
+}
+const YETI_FEET := -48.0   # quadros de 256×128 centrados; pés na linha 112
 const FLOOR_Y := 176.0
 const BODY_HALF := 20.0     # o corpo fica a 20 px da borda de trás das poses (olham para a esquerda)
 const GRAVITY := 0.25
@@ -29,17 +38,27 @@ var _vel := Vector2.ZERO
 var _shots := 0
 var _moves := 0
 var _player: Player
+var _yeti := not ResourceLoader.exists(POSES % 15)
 
 
 func _ready() -> void:
+	if _yeti:
+		boss_name = "AVALANCHE YETI"
 	super()
 	_sprite.position.y = 0
+	if _yeti:
+		for c in get_children():
+			if c is CollisionShape2D:
+				c.shape.size = Vector2(40, 48)
+				c.position.y = -24
 	_sprite.frame_changed.connect(_anchor)
 	_sprite.animation_changed.connect(_anchor)
 	_set_state(State.INTRO, 70)
 
 
 func _frames() -> SpriteFrames:
+	if _yeti:
+		return Enemy.sheet("yeti")
 	var sf := SpriteFrames.new()
 	sf.remove_animation(&"default")
 	for anim in ANIMS:
@@ -56,8 +75,12 @@ func _anchor() -> void:
 	if tex == null:
 		return
 	var s := tex.get_size()
-	_sprite.offset = Vector2((BODY_HALF - s.x / 2) * -_facing, -s.y / 2)
+	_sprite.offset = Vector2(0, YETI_FEET) if _yeti else Vector2((BODY_HALF - s.x / 2) * -_facing, -s.y / 2)
 	_sprite.flip_h = _facing > 0
+
+
+func _play(anim: StringName) -> void:
+	_sprite.play(YETI.get(anim, &"idle") if _yeti else anim)
 
 
 func _set_state(s: State, frames: int) -> void:
@@ -66,7 +89,7 @@ func _set_state(s: State, frames: int) -> void:
 	var anim: StringName = {State.INTRO: &"idle", State.IDLE: &"idle", State.SHOOT: &"aim", State.DIVE: &"dive",
 		State.SLIDE: &"slide", State.BREATH: &"breath", State.JUMP: &"jump", State.LAND: &"land",
 		State.BLIZZARD: &"blizzard"}[s]
-	_sprite.play(anim)
+	_play(anim)
 	_anchor()
 
 
@@ -89,7 +112,7 @@ func _physics_process(delta: float) -> void:
 				_choose()
 		State.SHOOT:
 			if _t == 12:
-				_sprite.play(&"throw")
+				_play(&"throw")
 				_spawn(IceShot.new(), Vector2(_facing * 26, -14))
 			if _t <= 0:
 				_shots -= 1
@@ -123,8 +146,9 @@ func _physics_process(delta: float) -> void:
 			_vel.y += GRAVITY
 			position += _vel
 			position.x = clampf(position.x, arena.x, arena.y)
-			if _vel.y > 0 and _sprite.animation != &"fall":
-				_sprite.play(&"fall")
+			if _vel.y > 0 and _t > 0:
+				_t = 0
+				_play(&"fall")
 			if position.y >= FLOOR_Y:
 				position.y = FLOOR_Y
 				_set_state(State.LAND, 14)
@@ -166,7 +190,7 @@ func _face_player() -> void:
 
 
 func _hurtbox() -> Rect2:
-	return Rect2(global_position - Vector2(16, 32), Vector2(32, 32))
+	return Rect2(global_position - Vector2(18, 46), Vector2(36, 46)) if _yeti else Rect2(global_position - Vector2(16, 32), Vector2(32, 32))
 
 
 func _spawn(n: Node2D, at: Vector2, dir := 0) -> void:
@@ -263,12 +287,13 @@ class IceStatue extends Boss:
 		damage = {}
 		super()
 		_sprite.position.y = 0
-		_sprite.offset.y = -16
+		_sprite.offset.y = -_sprite.sprite_frames.get_frame_texture(&"idle", 0).get_height() / 2.0
 		defeated.connect(queue_free)
 
 	func _frames() -> SpriteFrames:
 		var sf := SpriteFrames.new()
 		sf.remove_animation(&"default")
 		sf.add_animation(&"idle")
-		sf.add_frame(&"idle", load(POSES % 72))
+		var pose := POSES % 72
+		sf.add_frame(&"idle", load(pose) if ResourceLoader.exists(pose) else load("res://assets/enemies/icespike.png"))
 		return sf

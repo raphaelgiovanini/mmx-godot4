@@ -116,16 +116,16 @@ func _explode() -> void:
 
 
 func _frames() -> SpriteFrames:
-	var dir := ProjectSettings.globalize_path(ROOT + boss_id)
+	var dir := ROOT + boss_id
 	var frames := SpriteFrames.new()
 	frames.remove_animation(&"default")
 	frames.add_animation(&"idle")
 	frames.set_animation_speed(&"idle", 4)
 	for i in 8:
-		var img := Image.load_from_file(dir.path_join("idle_%d.png" % i)) if FileAccess.file_exists(dir.path_join("idle_%d.png" % i)) else null
-		if img == null:
+		var tex := Assets.texture(dir.path_join("idle_%d.png" % i))
+		if tex == null:
 			break
-		frames.add_frame(&"idle", ImageTexture.create_from_image(img))
+		frames.add_frame(&"idle", tex)
 	if frames.get_frame_count(&"idle") == 0:
 		push_error("sem sprites de %s: veja docs/chefes.md" % boss_id)
 		return null

@@ -15,8 +15,8 @@ var _hit := {}
 
 func _ready() -> void:
 	var path := "res://assets/fx/%s/%03d.png"
-	while FileAccess.file_exists(path % [frames_name, _tex.size()]):
-		_tex.append(ImageTexture.create_from_image(Image.load_from_file(path % [frames_name, _tex.size()])))
+	while Assets.exists(path % [frames_name, _tex.size()]):
+		_tex.append(Assets.texture(path % [frames_name, _tex.size()]))
 	var shape := CollisionShape2D.new()
 	var box := RectangleShape2D.new()
 	box.size = Vector2(20, 30)

@@ -70,7 +70,7 @@ static func frames(w: Dictionary) -> Dictionary:
 	if _cache.has(w.id):
 		return _cache[w.id]
 	var data := {"normal": [], "charged": [], "second": [], "rects": [[], [], []], "edge": 9999, "replaces": false, "lob": {}}
-	var dir := ProjectSettings.globalize_path(ROOT).path_join(w.game + "/" + w.id)
+	var dir := ROOT.path_join(w.game + "/" + w.id)
 	var meta = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join("meta.json")))
 	var skip := 0
 	if meta != null:
@@ -81,10 +81,10 @@ static func frames(w: Dictionary) -> Dictionary:
 	for i in 3:
 		var kind: String = ["shot", "charged", "second"][i]
 		var k := skip if kind == "second" else 0
-		while FileAccess.file_exists(dir.path_join("%s_%03d.png" % [kind, k])):
-			var img := Image.load_from_file(dir.path_join("%s_%03d.png" % [kind, k]))
-			data[["normal", "charged", "second"][i]].append(ImageTexture.create_from_image(img))
-			data.rects[i].append(img.get_used_rect())
+		while Assets.exists(dir.path_join("%s_%03d.png" % [kind, k])):
+			var tex := Assets.texture(dir.path_join("%s_%03d.png" % [kind, k]))
+			data[["normal", "charged", "second"][i]].append(tex)
+			data.rects[i].append(tex.get_image().get_used_rect())
 			k += 1
 	_cache[w.id] = data
 	return data

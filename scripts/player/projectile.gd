@@ -86,8 +86,7 @@ func _trail() -> CPUParticles2D:
 		p.damping_max = 250.0
 		p.scale_amount_min = 0.0
 		p.scale_amount_max = 1.0
-		p.texture = ImageTexture.create_from_image(Image.load_from_file(
-			ProjectSettings.globalize_path(ROOT + MMX8 + "/follow_shot.png")))
+		p.texture = Assets.texture(ROOT + MMX8 + "/follow_shot.png")
 		p.anim_speed_min = 1.0
 		p.anim_speed_max = 1.0
 		var m := CanvasItemMaterial.new()
@@ -162,7 +161,7 @@ static func _frames(name: String) -> SpriteFrames:
 		return null
 	if _cache.has(name):
 		return _cache[name]
-	var dir_path := ProjectSettings.globalize_path(ROOT + name)
+	var dir_path := ROOT + name
 	var meta = JSON.parse_string(FileAccess.get_file_as_string(dir_path.path_join("shots.json")))
 	var frames: SpriteFrames = null
 	if meta != null:
@@ -173,8 +172,8 @@ static func _frames(name: String) -> SpriteFrames:
 			frames.set_animation_speed(anim, FPS)
 			frames.set_animation_loop(anim, not (anim.ends_with("form") or anim.ends_with("hit")))
 			for file: String in meta[anim]:
-				var img := Image.load_from_file(dir_path.path_join(file))
-				if img:
-					frames.add_frame(anim, ImageTexture.create_from_image(img))
+				var tex := Assets.texture(dir_path.path_join(file))
+				if tex:
+					frames.add_frame(anim, tex)
 	_cache[name] = frames
 	return frames

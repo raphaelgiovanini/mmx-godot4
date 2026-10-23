@@ -37,4 +37,4 @@ func _play_loop() -> void:
 
 
 func _load(path: String) -> AudioStreamOggVorbis:
-	return AudioStreamOggVorbis.load_from_file(path) if FileAccess.file_exists(path) else null
+	return Assets.audio(path)

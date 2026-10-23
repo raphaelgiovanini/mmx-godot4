@@ -61,8 +61,7 @@ func _apply_palette() -> void:
 		material.shader = SWAP_SHADER
 	var m := material as ShaderMaterial
 	if _palettes == null:
-		_palettes = JSON.parse_string(FileAccess.get_file_as_string(
-			ProjectSettings.globalize_path("res://assets/weapons/palettes.json")))
+		_palettes = JSON.parse_string(FileAccess.get_file_as_string("res://assets/weapons/palettes.json"))
 		if _palettes == null:
 			_palettes = {}
 	var pair = _palettes.get(_palette) if _palette != "" else null
@@ -145,12 +144,11 @@ func show_state(pose: StringName, facing: int) -> void:
 	play(pose)
 
 
-## Monta o SpriteFrames uma vez por personagem. Lê os PNGs direto do disco: são gerados fora do
-## editor (tools/export_mmx8_skins.gd) e não precisam passar pelo importador.
+## Monta o SpriteFrames uma vez por personagem, com os PNGs importados (tools/export_mmx8_skins.gd).
 static func _load(id: String) -> SpriteFrames:
 	if _cache.has(id):
 		return _cache[id]
-	var dir := ProjectSettings.globalize_path(ROOT + id)
+	var dir := ROOT + id
 	var text := FileAccess.get_file_as_string(dir.path_join("frames.json"))
 	var meta = JSON.parse_string(text)
 	if meta == null:
@@ -163,8 +161,8 @@ static func _load(id: String) -> SpriteFrames:
 		frames.set_animation_speed(anim, meta[anim].fps)
 		frames.set_animation_loop(anim, meta[anim].loop)
 		for file: String in meta[anim].frames:
-			var img := Image.load_from_file(dir.path_join(file))
-			if img:
-				frames.add_frame(anim, ImageTexture.create_from_image(img))
+			var tex := Assets.texture(dir.path_join(file))
+			if tex:
+				frames.add_frame(anim, tex)
 	_cache[id] = frames
 	return frames

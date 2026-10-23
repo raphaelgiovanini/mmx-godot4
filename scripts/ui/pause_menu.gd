@@ -360,7 +360,7 @@ func _num(v: float) -> String:
 ## Imagem de arquivo (fora do git); pixel art é ampliado 8× antes para não borrar com o filtro linear.
 func _image(path: String, pixel: bool) -> Texture2D:
 	if not _tex.has(path):
-		var img := Image.load_from_file(path) if FileAccess.file_exists(path) else null
+		var img := Assets.image(path)
 		if img and pixel:
 			img.resize(img.get_width() * 8, img.get_height() * 8, Image.INTERPOLATE_NEAREST)
 		if img:

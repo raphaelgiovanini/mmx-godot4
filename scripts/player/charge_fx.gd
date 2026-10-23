@@ -35,28 +35,24 @@ func _ready() -> void:
 
 
 static func _load_sound(name: String) -> AudioStream:
-	var dir := ProjectSettings.globalize_path("res://assets/sfx/")
-	if FileAccess.file_exists(dir + name + ".wav"):
-		return AudioStreamWAV.load_from_file(dir + name + ".wav")
-	if FileAccess.file_exists(dir + name + ".ogg"):
-		return AudioStreamOggVorbis.load_from_file(dir + name + ".ogg")
-	return null
+	var dir := "res://assets/sfx/"
+	return Assets.audio(dir + name + ".wav") if Assets.exists(dir + name + ".wav") else Assets.audio(dir + name + ".ogg")
 
 
 ## Quadros e metadados de um jogo (vazio se não foi instalado).
 static func _data(game: String) -> Dictionary:
 	if _cache.has(game):
 		return _cache[game]
-	var dir := ProjectSettings.globalize_path(ROOT + game)
+	var dir := ROOT + game
 	var meta = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join("charge.json")))
 	var data := {}
 	if meta != null:
 		data = meta
 		data.frames = {}
 		for k in range(int(meta.first), int(meta.last) + 1):
-			var img := Image.load_from_file(dir.path_join("sparks_%03d.png" % k))
-			if img:
-				data.frames[k] = ImageTexture.create_from_image(img)
+			var tex := Assets.texture(dir.path_join("sparks_%03d.png" % k))
+			if tex:
+				data.frames[k] = tex
 	_cache[game] = data
 	return data
 

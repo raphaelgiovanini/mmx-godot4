@@ -84,8 +84,8 @@ func _spawn(fx_name: StringName, offset: Vector2, side: int) -> void:
 		frames.set_animation_speed(&"default", 20.0)
 		var k := 0
 		var path := "res://assets/fx/%s/%03d.png"
-		while FileAccess.file_exists(path % [fx_name, k]):
-			frames.add_frame(&"default", ImageTexture.create_from_image(Image.load_from_file(path % [fx_name, k])))
+		while Assets.exists(path % [fx_name, k]):
+			frames.add_frame(&"default", Assets.texture(path % [fx_name, k]))
 			k += 1
 		_fx[fx_name] = frames if k > 0 else null
 	if _fx[fx_name] == null:
