@@ -13,6 +13,7 @@ material = SubResource("xbr")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+process_mode = 3
 stretch = true
 script = ExtResource("1")
 
@@ -22,3 +23,4 @@ size = Vector2i(398, 224)
 render_target_update_mode = 4
 
 [node name="Highway" parent="View" instance=ExtResource("3")]
+process_mode = 1

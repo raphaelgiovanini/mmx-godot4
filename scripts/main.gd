@@ -3,6 +3,8 @@ extends SubViewportContainer
 ## filtro xBR (scripts/xbr.gdshader), que deixa os contornos lisos. F2 liga e desliga o filtro.
 ## Interface (HUD, menus, avisos: CanvasLayer com layer >= 0) é desenhada direto na janela, fora do
 ## filtro e na resolução dela; o céu (layer negativo) fica no SubViewport, atrás da fase.
+## Este nó roda sempre (process_mode) para continuar passando as teclas ao jogo pausado; a fase
+## é que pausa (process_mode pausável na instância).
 
 
 func _ready() -> void:
