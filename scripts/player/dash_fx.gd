@@ -6,6 +6,8 @@ extends Node2D
 const GHOST_EVERY := 2      # frames entre imagens do rastro
 const GHOST_LIFE := 12      # frames até a imagem sumir
 const DUST_EVERY := 6
+const WALL_SMOKE_DELAY := 20.0  # px deslizados antes da primeira fumaça (Regenesis: TIME_DELAY_WALL_SMOKE)
+const WALL_SMOKE_ADJUST := 0.8  # a fumaça alterna entre 8 px e 8 * isto da parede
 const LOOKAHEAD := 48.0     # px que a câmera adianta durante o dash
 const LOOKAHEAD_EASE := 0.12
 ## Efeito -> [folha do mmx8, colunas, linhas]
@@ -16,6 +18,8 @@ const MMX8 := {&"dash_spark": ["dash", 3, 2], &"dash_smoke": ["smoke", 3, 3], &"
 
 var _tick := 0
 var _slide_tick := 0
+var _slide_y := 0.0
+var _smoke_near := false
 var _prev_state := -1
 var _prev_kick := 0
 var _fx := {}
@@ -45,8 +49,11 @@ func _physics_process(_delta: float) -> void:
 			_spawn(&"dash_smoke", Vector2(-player.facing * 8, -6), player.facing)
 	# Deslizando, a parede fica atrás do X (facing aponta para fora dela).
 	_slide_tick = _slide_tick + 1 if player.state == Player.State.WALL_SLIDE else 0
-	if _slide_tick % DUST_EVERY == 1:
-		_spawn(&"wall_slide", Vector2(-player.facing * 8, -4), player.facing)
+	if _slide_tick == 1:
+		_slide_y = player.global_position.y
+	if _slide_tick % DUST_EVERY == 1 and player.global_position.y - _slide_y > WALL_SMOKE_DELAY:
+		_smoke_near = not _smoke_near
+		_spawn(&"wall_slide", Vector2(-player.facing * 8 * (WALL_SMOKE_ADJUST if _smoke_near else 1.0), -4), player.facing)
 	# Pulo na parede: kick_timer recomeça; a parede fica do lado oposto ao do chute.
 	if player.kick_timer > _prev_kick:
 		_spawn(&"wall_kick", Vector2(-player.kick_dir * 10, -10), player.kick_dir)
