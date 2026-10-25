@@ -3,7 +3,7 @@ config_version=5
 
 [application]
 
-config/name="Mega Man X + X2 (Godot 4)"
+config/name="Mega Man X RPG"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 

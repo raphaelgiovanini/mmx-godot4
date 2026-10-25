@@ -9,8 +9,8 @@ const DUST_EVERY := 6
 const LOOKAHEAD := 48.0     # px que a câmera adianta durante o dash
 const LOOKAHEAD_EASE := 0.12
 ## Efeito -> [folha do mmx8, colunas, linhas]
-const MMX8 := {&"dash_spark": ["dash", 3, 2], &"dash_smoke": ["smoke", 3, 3], &"wall_slide": ["sparks", 3, 2],
-	&"wall_kick": ["small_smoke", 3, 2]}
+const MMX8 := {&"dash_spark": ["dash", 3, 2], &"dash_smoke": ["smoke", 3, 3], &"wall_slide": ["smoke", 3, 3],
+	&"wall_kick": ["wall_kick", 3, 1]}
 
 @export var camera_path: NodePath
 

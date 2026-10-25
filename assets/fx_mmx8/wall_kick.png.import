@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://38mlt2ic42s4"
-path="res://.godot/imported/small_smoke.png-063026c157ba5d3b73b8386b8057db04.ctex"
+uid="uid://ccv45gqb672vw"
+path="res://.godot/imported/wall_kick.png-d77327885e713b491a834478d5a627e3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/fx_mmx8/small_smoke.png"
-dest_files=["res://.godot/imported/small_smoke.png-063026c157ba5d3b73b8386b8057db04.ctex"]
+source_file="res://assets/fx_mmx8/wall_kick.png"
+dest_files=["res://.godot/imported/wall_kick.png-d77327885e713b491a834478d5a627e3.ctex"]
 
 [params]
 
